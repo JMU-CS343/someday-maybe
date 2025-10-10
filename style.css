@@ -1,359 +1,677 @@
 /* ===========================
    Variables
    =========================== */
-   :root{
-    /* color scheme */
-    --bg:#dad7c4;
-    --panel:#e8e8df;
-    --menu-card:#453b2a;
-    --menu-text:#ffff;
-    --text:#453b2a;
-    --muted:#96948c;
-    --pill:#c85e21;
-    --accent:#5865f2;
-    --card:#ffffff;
-  
-    /* effects & radii */
-    --shadow:0 1px 2px rgba(0,0,0,.08), 0 8px 24px rgba(0,0,0,.06);
-    --radius:16px;
-  
-    /* layout */
-    --appbar-h:70px;
-  
-    /* sidebar widths */
-    --sidebar-w-expanded: 240px;   /* desktop full */
-    --sidebar-w-collapsed: 64px;   /* icon rail */
-    --sidebar-w: var(--sidebar-w-expanded); /* current width used by layout */
-  }
-  
-  body.theme-purple{ --accent:#7b61ff; --panel:#ece9ff; }
-  
-  /* ===========================
-     Base
-     =========================== */
-  *{ box-sizing:border-box; }
-  body{
-    margin:0;
-    font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    color:var(--text);
-    background:var(--bg);
-  }
-  
-  /* ===========================
-     Header / App Bar
-     =========================== */
-  .top-bar{
-    position:sticky; top:0; z-index:10; /* header sits above content; sidebar sits below via top offset */
-    display:flex; align-items:center; gap:10px; justify-content:space-between;
-    padding:14px 20px; background:var(--bg);
-    border-bottom:1px solid #e6e7eb;
-    min-height:var(--appbar-h);
-  }
-  .top-bar h1{ font-size:20px; margin:0; flex:1; }
-  
-  /* header hamburger (shows only on small screens) */
-  .nav-toggle{
-    display:none; place-items:center;
-    width:36px; height:36px; border-radius:10px;
-    border:1px solid #d4d7de; background:var(--panel);
-    box-shadow:var(--shadow); font-size:18px; cursor:pointer;
-  }
-  
-  .gear{
-    width:36px; height:36px; border-radius:10px; background:var(--panel);
-    display:grid; place-items:center; cursor:pointer; box-shadow:var(--shadow);
-  }
-  .gear svg{ width:20px; height:20px; fill:var(--text); }
-  
-  /* Settings popover */
-  .settings{
-    position:absolute; right:16px; top:64px; width:220px;
-    background:var(--menu-card); border-radius:12px; box-shadow:var(--shadow);
-    padding:10px; display:none;
-  }
-  .settings h4{
-    margin:6px 8px 10px; font-size:12px; text-transform:uppercase;
-    letter-spacing:.08em; color:var(--menu-text);
-  }
-  .settings .btn{
-    width:100%; padding:10px 12px; border:1px solid #e6e7eb;
-    background:#fff; border-radius:10px; cursor:pointer; font:inherit; color:var(--text);
-  }
-  .settings .btn + .btn{ margin-top:8px; }
-  
-  /* ===========================
-     Layout: Sidebar + Content
-     =========================== */
-  .shell{ min-height:calc(100dvh - var(--appbar-h)); }
-  
-  .sidebar{
-    width:var(--sidebar-w);
-    position:fixed; left:0; top:var(--appbar-h); bottom:0;
-    display:flex; flex-direction:column;
-    padding:12px;
-    background:#ac511d; color:#e7e7ea;
-    border-right:1px solid rgba(255,255,255,0.08);
-    overflow:auto;
-    z-index:70;                 /* sits above content; header stays on top via sticky */
-    will-change: transform;     /* smoother GPU slide on small screens */
-    contain: paint;
-  }
-  .content{ margin-left:var(--sidebar-w); }
-  
-  /* nav items */
-  .nav{ display:flex; flex-direction:column; gap:6px; }
-  .nav-item{
-    display:flex; align-items:center; gap:10px;
-    width:100%; padding:10px 12px;
-    background:transparent; border:0; border-radius:8px;
-    color:inherit; cursor:pointer; font:inherit;
-  }
-  .nav-item:hover{ background:rgba(255,255,255,0.06); }
-  .nav-item.is-active{
-    background:rgba(88,101,242,0.18);
-    outline:1px solid rgba(88,101,242,0.5);
-  }
-  .icon{ width:22px; display:inline-grid; place-items:center; font-size:18px; }
-  .label{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  
-  /* collapse to icon rail (desktop) */
-  .collapse-btn{
-    margin-top:auto; align-self:flex-end;
-    padding:8px 10px; border-radius:8px;
-    background:transparent; color:#e7e7ea;
-    border:1px solid rgba(255,255,255,0.15);
-    cursor:pointer;
-  }
-  body.sidebar-collapsed{ --sidebar-w: var(--sidebar-w-collapsed); }
-  body.sidebar-collapsed .label{ display:none; }
-  body.sidebar-collapsed .collapse-btn{ transform: rotate(180deg); }
-  
-  /* mobile drawer backdrop */
-  .backdrop{
-    position:fixed; inset:0; z-index:60;
-    background:rgba(0,0,0,0.35);
-    opacity:0; pointer-events:none; transition:opacity .2s ease;
-  }
-  body.sidebar-open .backdrop{ opacity:1; pointer-events:auto; }
-  
-  /* ===========================
-     Boards row (horizontal)
-     =========================== */
-  .boards{
-    padding:24px;
-    display:flex; flex-wrap:nowrap; gap:24px; align-items:start;
-    overflow-x:auto; overflow-y:hidden;
-    height:calc(100dvh - var(--appbar-h));
-    scroll-snap-type:x proximity;
-  }
-  .boards::-webkit-scrollbar{ height:10px; }
-  .boards::-webkit-scrollbar-thumb{ background:#cfd3da; border-radius:999px; }
-  
-  /* ===========================
-     List column
-     =========================== */
-  .list{
-    background:var(--panel); border-radius:var(--radius); box-shadow:var(--shadow);
-    display:flex; flex-direction:column; min-height:560px; max-height:100%;
-    width:360px; flex:0 0 360px; scroll-snap-align:start;
-    min-width:0; /* allow both columns to shrink evenly */
-  }
-  .list-header{ display:flex; align-items:center; justify-content:space-between; padding:16px 16px 8px; }
-  .list-title{ font-size:24px; font-weight:700; }
-  .menu{
-    width:36px; height:36px; border-radius:10px; background:rgba(0,0,0,.06);
-    display:grid; place-items:center; cursor:pointer;
-  }
-  
-  /* ===========================
-     Cards / Tasks
-     =========================== */
-  .card{
-    background:#f1f3f5; margin:12px 16px; border-radius:14px; padding:12px;
-    position:relative; box-shadow:inset 0 0 0 1px rgba(0,0,0,.04);
-  }
-  .chip{
-    display:inline-flex; align-items:center; justify-content:center;
-    background:var(--pill); color:#fff; font-weight:700; height:24px;
-    padding:0 12px; border-radius:999px; font-size:12px; letter-spacing:.02em;
-  }
-  .task-title{ margin:10px 0 6px; font-weight:600; }
-  .muted{ font-size:12px; color:var(--muted); }
-  
-  /* Checkbox look */
-  .checkbox{
-    position:absolute; right:12px; top:12px; width:28px; height:28px;
-    border-radius:999px; border:2px solid #d1d6e0; background:#fff;
-    display:grid; place-items:center; cursor:pointer;
-  }
-  .checkbox input{ appearance:none; width:0; height:0; }
-  .checkbox.checked{ background:var(--text); border-color:var(--text); }
-  .checkbox.checked svg{ display:block; }
-  .checkbox svg{ display:none; width:16px; height:16px; fill:#fff; }
-  
-  /* Adders */
-  .add-task, .add-list{
-    display:grid; place-items:center; height:44px; margin:12px 16px 16px;
-    border:2px dashed #cfd3da; border-radius:12px; cursor:pointer;
-    color:var(--muted); font-weight:600; background:rgba(255,255,255,.55);
-  }
-  .add-list{ width:72px; height:72px; border-radius:16px; margin:0 auto; }
-  
-  /* Completed preview */
-  .done-row{ display:flex; align-items:center; gap:12px; padding:12px 16px; color:var(--muted); }
-  .dot{ width:28px; height:28px; border-radius:999px; background:#201f2b; display:inline-block; }
-  
-  /* ===========================
-     Pager (centered in content area)
-     =========================== */
-  .pager{
-    position:fixed; bottom:18px;
-    left:var(--sidebar-w);
-    width:calc(100vw - var(--sidebar-w));
-    display:flex; justify-content:center; gap:18px;
-    pointer-events:none;
-  }
-  .pager button{
-    pointer-events:auto;
-    width:54px; height:40px; border-radius:12px;
-    border:1px solid #d4d7de; background:#fff; box-shadow:var(--shadow);
-    cursor:pointer;
-  }
-  
-  /* menu popover for list ⋯ */
-  .menu-pop{
-    position:absolute; z-index:1000; min-width:180px;
-    background:var(--card);
-    border:1px solid #e6e7eb; border-radius:10px;
-    box-shadow:var(--shadow); padding:6px;
-  }
-  .menu-pop button{
-    display:block; width:100%; text-align:left;
-    padding:10px 12px; background:#fff; border:none;
-    border-radius:8px; cursor:pointer; font:inherit; color:var(--text);
-  }
-  .menu-pop button:hover{ background:#f5f6f8; }
-  .menu-pop .danger{ color:#b42318; }
-  
-  /* ===========================
-     Calendar View
-     =========================== */
-  #calendar-view{ padding:24px; }
-  .cal-head{
-    display:flex; align-items:center; justify-content:space-between;
-    margin-bottom:10px;
-  }
-  .cal-head h2{ margin:0; font-size:18px; }
-  .cal-head .btn{
-    padding:8px 10px; border:1px solid #e6e7eb;
-    background:#fff; border-radius:10px; cursor:pointer;
-  }
-  .cal-dow{
-    display:grid; grid-template-columns:repeat(7,1fr); gap:8px;
-    color:var(--muted); text-align:center; font-size:12px; margin-bottom:6px;
-  }
-  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:8px; }
-  .cal-cell{
-    background:#fff; border:1px solid #e6e7eb;
-    border-radius:10px; padding:8px; min-height:92px;
-  }
-  .cal-date{ font-weight:700; margin-bottom:4px; }
-  .cal-item{ font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  
-  /* Drag & drop affordance */
-  .card.drag-over, .tasks.drag-over, .cal-cell.drag-over { outline:2px dashed var(--accent); }
-  
-  /* ===========================
-     Responsive
-     =========================== */
-  
-  /* Icon rail at “half screen” (no overlay, no floating buttons) */
-  @media (max-width: 1200px) and (min-width: 641px){
-    :root{ --sidebar-w: var(--sidebar-w-collapsed); }  /* 64px rail */
-    .sidebar{ width: var(--sidebar-w); }
-    .sidebar .label{ display:none; }
-  
-    /* exactly two columns in view */
-    .list{
-      flex: 0 0 calc((100% - 24px) / 2); /* 24px = .boards gap */
-      width:auto;
-      min-width:0;
-    }
-  }
-  
-  /* Drawer + header hamburger on small screens (1-up, centered) */
-  @media (max-width: 640px){
-    :root{ --sidebar-w: 0px; }           /* content gets full width */
-    .content{ margin-left: 0; }
-    .nav-toggle{ display: inline-grid; }
-  
-    .sidebar{
-      width: var(--sidebar-w-expanded);           /* fixed drawer width */
-      transform: translate3d(-100%,0,0);          /* off-canvas by default */
-      transition: transform 220ms cubic-bezier(.22,.61,.36,1);
-      box-shadow: 12px 0 24px rgba(0, 0, 0, 0.25);
-    }
-    body.sidebar-open .sidebar{ transform: translate3d(0,0,0); }
-  
-    /* Center one list at a time */
-    .boards{
-      justify-content: flex-start;      /* natural flow */
-      scroll-snap-type: x mandatory;    /* snap to the centered card */
-      scroll-padding: 24px;             /* match .boards padding */
-    }
+:root {
+  /* color scheme */
+  --bg: #dad7c4;
+  --panel: #e8e8df;
+  --menu-card: #453b2a;
+  --menu-text: #ffff;
+  --text: #453b2a;
+  --muted: #96948c;
+  --pill: #c85e21;
+  --accent: #5865f2;
+  --card: #ffffff;
 
-    /* Make each card fill the viewport minus padding, then snap to center */
-    .list{
-      flex: 0 0 calc(100% - 48px);      /* 24px padding on each side => 48px */
-      width: auto;
-      min-width: 0;
-      scroll-snap-align: center;        /* <— center the card itself */
-    }
+  /* effects & radii */
+  --shadow: 0 1px 2px rgba(0, 0, 0, .08), 0 8px 24px rgba(0, 0, 0, .06);
+  --radius: 16px;
 
-    /* Add virtual gutters so the first & last lists can reach center */
-    .boards::before,
-    .boards::after{
-      content: "";
-      flex: 0 0 calc(50vw - 24px);      /* half viewport minus half card padding */
-    }
+  /* layout */
+  --appbar-h: 70px;
 
-  
-    .pager{ left: 0; width: 100vw; }   /* keep arrows centered */
-  }
-  
-  /* Make header a vertical stack, with a pinned ellipsis */
-.list-header{
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 16px 16px 8px;
+  /* sidebar widths */
+  --sidebar-w-expanded: 240px;
+  /* desktop full */
+  --sidebar-w-collapsed: 64px;
+  /* icon rail */
+  --sidebar-w: var(--sidebar-w-expanded);
+  /* current width used by layout */
 }
 
-.list-title{
-  margin: 0;                 /* remove default h2 margin */
+body.theme-purple {
+  --accent: #7b61ff;
+  --panel: #ece9ff;
+}
+
+/* ===========================
+     Base
+     =========================== */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+}
+
+/* ===========================
+     Header / App Bar
+     =========================== */
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  /* header sits above content; sidebar sits below via top offset */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: var(--bg);
+  border-bottom: 1px solid #e6e7eb;
+  min-height: var(--appbar-h);
+}
+
+.top-bar h1 {
+  font-size: 20px;
+  margin: 0;
+  flex: 1;
+}
+
+/* header hamburger (shows only on small screens) */
+.nav-toggle {
+  display: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid #d4d7de;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.menu,
+.gear {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 1rem;
+  background: var(--panel);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+
+.menu svg,
+.gear svg {
+  width: 20px;
+  height: 20px;
+  fill: var(--text);
+}
+
+/* Settings popover */
+.settings {
+  position: absolute;
+  right: 16px;
+  top: 64px;
+  width: 220px;
+  background: var(--menu-card);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 10px;
+  display: none;
+}
+
+.settings h4 {
+  margin: 6px 8px 10px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--menu-text);
+}
+
+.settings .btn {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e6e7eb;
+  background: #fff;
+  border-radius: 10px;
+  cursor: pointer;
+  font: inherit;
+  color: var(--text);
+}
+
+.settings .btn+.btn {
+  margin-top: 8px;
+}
+
+/* ===========================
+     Layout: Sidebar + Content
+     =========================== */
+.shell {
+  min-height: calc(100dvh - var(--appbar-h));
+}
+
+.sidebar {
+  width: var(--sidebar-w);
+  position: fixed;
+  left: 0;
+  top: var(--appbar-h);
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  background: #ac511d;
+  color: #e7e7ea;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: auto;
+  z-index: 70;
+  /* sits above content; header stays on top via sticky */
+  will-change: transform;
+  /* smoother GPU slide on small screens */
+  contain: paint;
+}
+
+.content {
+  margin-left: var(--sidebar-w);
+}
+
+/* nav items */
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.nav-item.is-active {
+  background: rgba(88, 101, 242, 0.18);
+  outline: 1px solid rgba(88, 101, 242, 0.5);
+}
+
+.icon {
+  width: 22px;
+  display: inline-grid;
+  place-items: center;
+  font-size: 18px;
+}
+
+.label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* collapse to icon rail (desktop) */
+.collapse-btn {
+  margin-top: auto;
+  align-self: flex-end;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: transparent;
+  color: #e7e7ea;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+}
+
+body.sidebar-collapsed {
+  --sidebar-w: var(--sidebar-w-collapsed);
+}
+
+body.sidebar-collapsed .label {
+  display: none;
+}
+
+body.sidebar-collapsed .collapse-btn {
+  transform: rotate(180deg);
+}
+
+/* mobile drawer backdrop */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease;
+}
+
+body.sidebar-open .backdrop {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ===========================
+     Boards row (horizontal)
+     =========================== */
+.boards {
+  padding: 24px;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 24px;
+  align-items: start;
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: calc(100dvh - var(--appbar-h));
+  scroll-snap-type: x proximity;
+}
+
+.boards::-webkit-scrollbar {
+  height: 10px;
+}
+
+.boards::-webkit-scrollbar-thumb {
+  background: #cfd3da;
+  border-radius: 999px;
+}
+
+/* ===========================
+     List column
+     =========================== */
+.list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  background: var(--panel);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  min-height: 560px;
+  max-height: 100%;
+  width: 360px;
+  flex: 0 0 360px;
+  scroll-snap-align: start;
+  min-width: 0;
+  /* allow both columns to shrink evenly */
+}
+
+.list-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 16px 8px;
+  width: 100%;
+}
+
+.list-title {
   font-size: 24px;
   font-weight: 700;
-  padding-right: 56px;       /* room for the ellipsis button */
+}
+
+.list-menu {
+  border: none;
+  background: rgba(255, 255, 255, .55);
+}
+
+
+/* ===========================
+     Cards / Tasks
+     =========================== */
+
+.tasks {
+  width: 100%;
+}
+
+.card {
+  background: #f1f3f5;
+  margin: 12px 16px;
+  border-radius: 14px;
+  padding: 12px;
+  position: relative;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .04);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--pill);
+  color: #fff;
+  font-weight: 700;
+  height: 24px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  letter-spacing: .02em;
+}
+
+.task-title {
+  margin: 10px 0 6px;
+  font-weight: 600;
+}
+
+.muted {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Checkbox look */
+.checkbox {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 2px solid #d1d6e0;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.checkbox input {
+  appearance: none;
+  width: 0;
+  height: 0;
+}
+
+.checkbox.checked {
+  background: var(--text);
+  border-color: var(--text);
+}
+
+.checkbox.checked svg {
+  display: block;
+}
+
+.checkbox svg {
+  display: none;
+  width: 16px;
+  height: 16px;
+  fill: #fff;
+}
+
+/* Adders */
+.add-task,
+.add-list {
+  display: grid;
+  place-items: center;
+
+  width: 4rem;
+  height: 4rem;
+  margin: 0.5rem;
+
+  border: 2px dashed #cfd3da;
+  border-radius: 1rem;
+
+  cursor: pointer;
+
+  color: var(--muted);
+  font-weight: 600;
+  background: rgba(255, 255, 255, .55);
+}
+
+/* Completed preview */
+.done-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  color: var(--muted);
+}
+
+.dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: #201f2b;
+  display: inline-block;
+}
+
+/* ===========================
+     Pager (centered in content area)
+     =========================== */
+.pager {
+  position: fixed;
+  bottom: 18px;
+  left: var(--sidebar-w);
+  width: calc(100vw - var(--sidebar-w));
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  pointer-events: none;
+}
+
+.pager button {
+  pointer-events: auto;
+  width: 54px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid #d4d7de;
+  background: #fff;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+}
+
+/* menu popover for list ⋯ */
+.menu-pop {
+  position: absolute;
+  z-index: 1000;
+  min-width: 180px;
+  background: var(--card);
+  border: 1px solid #e6e7eb;
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  padding: 6px;
+}
+
+.menu-pop button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  background: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  color: var(--text);
+}
+
+.menu-pop button:hover {
+  background: #f5f6f8;
+}
+
+.menu-pop .danger {
+  color: #b42318;
+}
+
+/* ===========================
+     Calendar View
+     =========================== */
+#calendar-view {
+  padding: 24px;
+}
+
+.cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.cal-head h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.cal-head .btn {
+  padding: 8px 10px;
+  border: 1px solid #e6e7eb;
+  background: #fff;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.cal-dow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  color: var(--muted);
+  text-align: center;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.cal-cell {
+  background: #fff;
+  border: 1px solid #e6e7eb;
+  border-radius: 10px;
+  padding: 8px;
+  min-height: 92px;
+}
+
+.cal-date {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.cal-item {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Drag & drop affordance */
+.card.drag-over,
+.tasks.drag-over,
+.cal-cell.drag-over {
+  outline: 2px dashed var(--accent);
+}
+
+/* ===========================
+     Responsive
+     =========================== */
+
+/* Icon rail at “half screen” (no overlay, no floating buttons) */
+@media (max-width: 1200px) and (min-width: 641px) {
+  :root {
+    --sidebar-w: var(--sidebar-w-collapsed);
+  }
+
+  /* 64px rail */
+  .sidebar {
+    width: var(--sidebar-w);
+  }
+
+  .sidebar .label {
+    display: none;
+  }
+
+  /* exactly two columns in view */
+  .list {
+    flex: 0 0 calc((100% - 24px) / 2);
+    /* 24px = .boards gap */
+    width: auto;
+    min-width: 0;
+  }
+}
+
+/* Drawer + header hamburger on small screens (1-up, centered) */
+@media (max-width: 640px) {
+  :root {
+    --sidebar-w: 0px;
+  }
+
+  /* content gets full width */
+  .content {
+    margin-left: 0;
+  }
+
+  .nav-toggle {
+    display: inline-grid;
+  }
+
+  .sidebar {
+    width: var(--sidebar-w-expanded);
+    /* fixed drawer width */
+    transform: translate3d(-100%, 0, 0);
+    /* off-canvas by default */
+    transition: transform 220ms cubic-bezier(.22, .61, .36, 1);
+    box-shadow: 12px 0 24px rgba(0, 0, 0, 0.25);
+  }
+
+  body.sidebar-open .sidebar {
+    transform: translate3d(0, 0, 0);
+  }
+
+  /* Center one list at a time */
+  .boards {
+    justify-content: flex-start;
+    /* natural flow */
+    scroll-snap-type: x mandatory;
+    /* snap to the centered card */
+    scroll-padding: 24px;
+    /* match .boards padding */
+  }
+
+  /* Make each card fill the viewport minus padding, then snap to center */
+  .list {
+    flex: 0 0 calc(100% - 48px);
+    /* 24px padding on each side => 48px */
+    width: auto;
+    min-width: 0;
+    scroll-snap-align: center;
+    /* <— center the card itself */
+  }
+
+  /* Add virtual gutters so the first & last lists can reach center */
+  .boards::before,
+  .boards::after {
+    content: "";
+    flex: 0 0 calc(50vw - 24px);
+    /* half viewport minus half card padding */
+  }
+
+
+  .pager {
+    left: 0;
+    width: 100vw;
+  }
+
+  /* keep arrows centered */
+}
+
+.list-title {
+  margin: 0;
+  /* remove default h2 margin */
+  font-size: 24px;
+  font-weight: 700;
+  padding-right: 56px;
+  /* room for the ellipsis button */
   line-height: 1.2;
 }
 
-.sort-row{
+.sort-row {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.sort-row label{ font-size: 12px; color: var(--muted); }
-
-/* Ellipsis pinned to top-right of the header */
-.list-menu{
-  position: absolute;
-  top: 16px; right: 16px;
-  width: 36px; height: 36px;
-  border-radius: 10px;
-  background: rgba(0,0,0,.06);
-  display: grid; place-items: center;
-  cursor: pointer;
-  border: none;
+.sort-row label {
+  font-size: 12px;
+  color: var(--muted);
 }

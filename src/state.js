@@ -17,12 +17,22 @@ export function todayISO() {
 
 const defaultState = {
   lists: [
-    { id: uid(), title: 'Shopping', sort: 'dueAsc', tasks: [
-      { id: uid(), title: 'Buy Nature Valley tenders', due: todayISO(), time: '', rank: null, tag: 'Shopping', done: false }
-    ]},
-    { id: uid(), title: 'Meal prep', sort: 'dueAsc', tasks: [
-      { id: uid(), title: 'Cook chicken', due: todayISO(), time: '', rank: null, tag: 'Cooking', done: false }
-    ]}
+    {
+      id: uid(),
+      title: 'Shopping',
+      sort: 'dueAsc',
+      tasks: [
+        { id: uid(), title: 'Buy Nature Valley tenders', due: todayISO(), time: '', rank: null, tag: 'Shopping', done: false }
+      ],
+    },
+    {
+      id: uid(),
+      title: 'Meal prep',
+      sort: 'dueAsc',
+      tasks: [
+        { id: uid(), title: 'Cook chicken', due: todayISO(), time: '', rank: null, tag: 'Cooking', done: false }
+      ],
+    }
   ]
 };
 
