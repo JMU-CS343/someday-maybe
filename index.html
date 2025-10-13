@@ -2,7 +2,7 @@
 <html lang="en-US">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="author" content="CS 343 Fall 2025 Team 6" />
     <meta name="description" content="Someday Maybe To-Do Boards App" />
     <title>Someday Maybe</title>
@@ -19,47 +19,84 @@
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <!-- App bar -->
-    <header class="top-bar appbar" style="position:sticky; top:0; z-index:50;">
-      <!-- header hamburger lives INSIDE header (only shows on small screens) -->
-      <button id="navToggle" class="nav-toggle" aria-label="Open navigation" title="Menu">☰</button>
+    <!-- Top app bar -->
+    <header class="top-bar appbar">
+      <!-- Header navigation toggle (mobile) -->
+      <button
+        id="navToggle"
+        class="nav-toggle"
+        aria-label="Open navigation"
+        aria-controls="sidebar"
+        aria-expanded="false"
+        title="Menu"
+      >☰</button>
 
-      <h1>Your Someday Maybes</h1>
+      <h1 id="siteTitle">Your Someday Maybes</h1>
 
-      <div class="gear" id="gearBtn" aria-label="Open settings" title="Settings">
-        <i class="fa-solid fa-gear"></i>
-      </div>
+      <!-- Settings trigger -->
+      <button class="gear" id="gearBtn" aria-haspopup="dialog" aria-controls="settings" title="Settings">
+        <i class="fa-solid fa-gear" aria-hidden="true"></i>
+        <span class="sr-only">Open settings</span>
+      </button>
 
-      <div class="settings" id="settings" role="dialog" aria-modal="true" aria-labelledby="themeHeading" style="display:none">
-        <h4 id="themeHeading">Change theme</h4>
-        <button class="btn" data-theme="default">Default</button>
-        <button class="btn" data-theme="purple">Purple</button>
-      </div>
+      <!-- Settings as a semantic dialog -->
+      <dialog class="settings" id="settings" aria-labelledby="themeHeading">
+        <form method="dialog">
+          <h2 id="themeHeading">Change theme</h2>
+          <div class="stack">
+            <button class="btn" data-theme="default">Default</button>
+            <button class="btn" data-theme="purple">Purple</button>
+            <button class="btn" value="close">Close</button>
+          </div>
+        </form>
+      </dialog>
     </header>
 
-    <!-- Shell: fixed sidebar + content area -->
+    <!-- App shell: complementary sidebar + main content -->
     <div class="shell">
-      <aside class="sidebar" id="sidebar">
-        <nav class="nav">
-          <button class="nav-item" data-view="boards">
-            <i class="fa-solid fa-house"></i><span class="label">Dashboard</span>
-          </button>
-          <button class="nav-item" data-view="calendar">
-            <i class="fa-solid fa-calendar"></i><span class="label">Calendar</span>
-          </button>
+      <aside class="sidebar" id="sidebar" aria-label="Primary">
+        <nav aria-label="Primary">
+          <ul class="nav">
+            <li>
+              <button class="nav-item" data-view="boards" aria-current="page">
+                <i class="fa-solid fa-house" aria-hidden="true"></i>
+                <span class="label">Dashboard</span>
+              </button>
+            </li>
+            <li>
+              <button class="nav-item" data-view="calendar">
+                <i class="fa-solid fa-calendar" aria-hidden="true"></i>
+                <span class="label">Calendar</span>
+              </button>
+            </li>
+            <li>
+              <button class="nav-item" data-view="today">
+                <i class="fa-solid fa-clock" aria-hidden="true"></i>
+                <span class="label">Today</span>
+              </button>
+            </li>
+          </ul>
         </nav>
+
         <button id="collapseBtn" class="collapse-btn" aria-label="Collapse sidebar">‹</button>
       </aside>
 
-      <!-- dark backdrop for small-screen drawer -->
-      <div class="backdrop" id="navBackdrop"></div>
+      <!-- Drawer backdrop (mobile only via CSS) -->
+      <div class="backdrop" id="navBackdrop" aria-hidden="true"></div>
 
-      <main class="content">
+      <main class="content" id="main" tabindex="-1" aria-labelledby="siteTitle">
+        <!-- App views render here -->
         <div id="app"></div>
       </main>
     </div>
 
-    <!-- App entry -->
-    <script type="module" src="./src/main.js"></script>
+    <!-- Scripts (non-module; order matters) -->
+    <script src="./src/state.js"></script>
+    <script src="./src/ui/menu.js"></script>
+    <script src="./src/views/boards.js"></script>
+    <script src="./src/views/calendar.js"></script>
+    <script src="./src/views/today.js"></script>
+    <script src="./src/main.js"></script>
   </body>
 </html>
+

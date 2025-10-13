@@ -1,66 +1,100 @@
 // src/views/calendar.js
-// Read-only month grid based on tasks' due dates/times.
+// Read-only month grid based on tasks' due dates/times (non-module version).
 
-import { getState, dateTimeMs } from '../state.js';
+(() => {
+  // Pull needed helpers from globals exposed by state.js
+  const { getState, dateTimeMs } = window;
 
-export function renderCalendar(root) {
-  const now = new Date();
-  let y = now.getFullYear();
-  let m = now.getMonth();
+  // Expose renderer as a global for main.js
+  window.renderCalendar = function renderCalendar(root) {
+    const now = new Date();
+    let y = now.getFullYear();
+    let m = now.getMonth();
 
-  const wrap = document.createElement('section');
-  wrap.id = 'calendar-view';
-  root.innerHTML = '';
-  root.appendChild(wrap);
+    const wrap = document.createElement('section');
+    wrap.id = 'calendar-view';
+    root.innerHTML = '';
+    root.appendChild(wrap);
 
-  draw();
+    draw();
 
-  function draw() {
-    const tasks = getState().lists.flatMap(l => l.tasks);
-    const byDate = new Map();
-    for (const t of tasks) { if (t.due) (byDate.get(t.due) || byDate.set(t.due, []).get(t.due)).push(t); }
-
-    const first = new Date(y, m, 1);
-    const startDay = first.getDay();
-    const daysInMonth = new Date(y, m + 1, 0).getDate();
-    const monthName = first.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
-
-    wrap.innerHTML = `
-      <div class="cal-head">
-        <button class="btn" id="calPrev">◀</button>
-        <h2>${monthName}</h2>
-        <button class="btn" id="calNext">▶</button>
-      </div>
-      <div class="cal-dow">${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div>${d}</div>`).join('')}</div>
-      <div class="cal-grid"></div>
-    `;
-    const grid = wrap.querySelector('.cal-grid');
-    for (let i = 0; i < startDay; i++) grid.appendChild(document.createElement('div'));
-    for (let day = 1; day <= daysInMonth; day++) {
-      const cell = document.createElement('div');
-      cell.className = 'cal-cell';
-      const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-      const head = document.createElement('div');
-      head.className = 'cal-date';
-      head.textContent = day;
-      cell.appendChild(head);
-      const items = (byDate.get(dateStr) || []).sort((a,b) => dateTimeMs(a) - dateTimeMs(b));
-      for (const t of items.slice(0, 4)) {
-        const s = document.createElement('div');
-        s.className = 'cal-item';
-        const time = t.time ? new Date(dateStr+'T'+t.time).toLocaleTimeString(undefined,{hour:'numeric', minute:'2-digit'})+' · ' : '';
-        s.textContent = time + t.title;
-        cell.appendChild(s);
+    function draw() {
+      // Collect tasks and bucket by YYYY-MM-DD
+      const lists = (getState().lists || []);
+      const tasks = lists.flatMap(l => l.tasks || []);
+      const byDate = new Map();
+      for (const t of tasks) {
+        if (!t || !t.due) continue;
+        if (!byDate.has(t.due)) byDate.set(t.due, []);
+        byDate.get(t.due).push(t);
       }
-      if (items.length > 4) {
-        const more = document.createElement('div');
-        more.className = 'cal-item';
-        more.textContent = `+${items.length - 4} more`;
-        cell.appendChild(more);
+
+      const first = new Date(y, m, 1);
+      const startDay = first.getDay();
+      const daysInMonth = new Date(y, m + 1, 0).getDate();
+      const monthName = first.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+
+      wrap.innerHTML = `
+        <div class="cal-head">
+          <button class="btn" id="calPrev" aria-label="Previous month">◀</button>
+          <h2>${monthName}</h2>
+          <button class="btn" id="calNext" aria-label="Next month">▶</button>
+        </div>
+        <div class="cal-dow">${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div>${d}</div>`).join('')}</div>
+        <div class="cal-grid"></div>
+      `;
+
+      const grid = wrap.querySelector('.cal-grid');
+
+      // Leading blanks
+      for (let i = 0; i < startDay; i++) grid.appendChild(document.createElement('div'));
+
+      // Days of month
+      for (let day = 1; day <= daysInMonth; day++) {
+        const cell = document.createElement('div');
+        cell.className = 'cal-cell';
+
+        const dateStr =
+          `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+        const head = document.createElement('div');
+        head.className = 'cal-date';
+        head.textContent = day;
+        cell.appendChild(head);
+
+        const items = (byDate.get(dateStr) || [])
+          .slice() // don’t mutate original
+          .sort((a, b) => dateTimeMs(a) - dateTimeMs(b));
+
+        for (const t of items.slice(0, 4)) {
+          const s = document.createElement('div');
+          s.className = 'cal-item';
+          const time = t.time
+            ? new Date(`${dateStr}T${t.time}`)
+                .toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) + ' · '
+            : '';
+          s.textContent = time + t.title;
+          cell.appendChild(s);
+        }
+
+        if (items.length > 4) {
+          const more = document.createElement('div');
+          more.className = 'cal-item';
+          more.textContent = `+${items.length - 4} more`;
+          cell.appendChild(more);
+        }
+
+        grid.appendChild(cell);
       }
-      grid.appendChild(cell);
+
+      // Nav handlers
+      wrap.querySelector('#calPrev').onclick = () => {
+        m--; if (m < 0) { m = 11; y--; } draw();
+      };
+      wrap.querySelector('#calNext').onclick = () => {
+        m++; if (m > 11) { m = 0; y++; } draw();
+      };
     }
-    wrap.querySelector('#calPrev').onclick = () => { m--; if (m < 0) { m = 11; y--; } draw(); };
-    wrap.querySelector('#calNext').onclick = () => { m++; if (m > 11) { m = 0; y++; } draw(); };
-  }
-}
+  };
+})();
+

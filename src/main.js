@@ -1,8 +1,8 @@
 // src/main.js
 // Bootstraps the app, handles nav routing + theme + sidebar modes.
 
-import { renderBoards } from './views/boards.js';
-import { renderCalendar } from './views/calendar.js';
+// import { renderBoards } from './views/boards.js';
+// import { renderCalendar } from './views/calendar.js';
 
 const app = document.getElementById('app');
 const sidebar = document.getElementById('sidebar');
@@ -20,25 +20,34 @@ function setView(view) {
     b.classList.toggle('is-active', b.dataset.view === view)
   );
   if (view === 'calendar') renderCalendar(app);
-  else renderBoards(app);
+  else if (view === 'today')    window.renderToday(app);   // <— new
+  else                          window.renderBoards(app);
 }
 
 // Sidebar interactions
 navToggle?.addEventListener('click', () => {
-  document.body.classList.toggle('sidebar-open');   // slide drawer on small screens
-});
-navBackdrop?.addEventListener('click', () => {
-  document.body.classList.remove('sidebar-open');
-});
-collapseBtn?.addEventListener('click', () => {
-  document.body.classList.toggle('sidebar-collapsed'); // icon rail on desktop
-});
-mqSmall.addEventListener?.('change', e => {
-  if (!e.matches) document.body.classList.remove('sidebar-open'); // cleanup on resize
+  if (!mqSmall.matches) return;                 // desktop: do nothing (desktop already works)
+  document.body.classList.toggle('sidebar-open');   // mobile: slide drawer
 });
 
-// Nav clicks (auto-close drawer on small)
-sidebar.addEventListener('click', (e) => {
+navBackdrop?.addEventListener('click', () => {
+  if (!mqSmall.matches) return;
+  document.body.classList.remove('sidebar-open');
+});
+
+collapseBtn?.addEventListener('click', () => {
+  // desktop icon-rail collapse (keep your existing desktop behavior)
+  if (mqSmall.matches) return;                  // ignore on mobile
+  document.body.classList.toggle('sidebar-collapsed');
+});
+
+// On resize up from mobile, clean up drawer state
+mqSmall.addEventListener?.('change', e => {
+  if (!e.matches) document.body.classList.remove('sidebar-open');
+});
+
+// Nav clicks (auto-close drawer on mobile)
+sidebar?.addEventListener('click', (e) => {
   const btn = e.target.closest('.nav-item');
   if (!btn) return;
   setView(btn.dataset.view);
