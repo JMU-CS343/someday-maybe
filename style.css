@@ -416,3 +416,7 @@ body[data-view="today"] #app {
 }
 
 .list .list-menu i { color: var(--pill); } 
+
+.pager button {
+  color: var(--pill);
+}
