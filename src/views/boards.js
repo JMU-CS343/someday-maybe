@@ -250,42 +250,33 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
       <div class="muted due">Due: ${escapeHtml(formatDateTime(task.due, task.time))}</div>
     `;
 
-    // Toggle complete (mouse + keyboard)
-    const cb = card.querySelector('.checkbox');
+    // === Toggle complete (use native checkbox change) ===
+    const cb    = card.querySelector('.checkbox');
     const input = cb.querySelector('input');
-    const toggleDone = () => {
-      updateTask(list.id, task.id, { done: !task.done });
-      cb.setAttribute('aria-checked', String(!task.done));
-      input.checked = !task.done;
-    };
-    cb.addEventListener('click', (e) => { e.stopPropagation(); toggleDone(); });
+
+    function setDone(val) {
+      updateTask(list.id, task.id, { done: val })
+      cb.setAttribute('aria-checked', String(val));
+      input.checked = val;                         
+      task.done = val;                               
+      rerender(card.closest('.list'));
+    }
+
+    // Prevent the card “edit-on-click” from firing when you hit the checkbox
+    input.addEventListener('click', (e) => e.stopPropagation());
+
+    // Use the checkbox’s own toggle as the source of truth
+    input.addEventListener('change', () => setDone(input.checked));
+
+
+    // Keyboard support on the faux checkbox
     cb.addEventListener('keydown', (e) => {
-      if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggleDone(); }
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        setDone(!input.checked);
+      }
     });
 
-    // Click to edit (avoids triggering when selecting text or clicking controls)
-    card.addEventListener('click', (e) => {
-      if (e.target.closest('.checkbox, button, input, select, textarea')) return;
-      if (window.getSelection && window.getSelection().toString()) return;
-
-      card.replaceWith(createTaskForm({
-        defaults: {
-          title: task.title,
-          due:   task.due || todayISO(),
-          time:  task.time || '',
-          tag:   task.tag || list.title
-        },
-        submitLabel: 'Save',
-        onSubmit: (vals) => {
-          updateTask(list.id, task.id, vals);
-          rerender(card.closest('.list'));
-        }
-      }));
-    });
-    card.addEventListener('dblclick', () => { card.click(); });
-    card.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
-    });
 
     // Drag & drop reorder within same list (drop above/below the target card)
     card.addEventListener('dragstart', (e) => {

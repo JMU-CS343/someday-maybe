@@ -196,16 +196,30 @@
   .task-title { margin: 10px 0 6px; font-weight: 600; }
   .muted { font-size: 12px; color: var(--muted); }
   
-  /* Checkbox */
-  .checkbox {
-    position: absolute; right: 12px; top: 12px; width: 28px; height: 28px;
-    border-radius: 999px; border: 2px solid #d1d6e0; background: #fff;
-    display: grid; place-items: center; cursor: pointer;
+/* Checkbox */
+.checkbox {
+  position: absolute; right: 12px; top: 12px; width: 28px; height: 28px;
+  border-radius: 999px; border: 2px solid #d1d6e0; background: #fff;
+  display: grid; place-items: center; cursor: pointer;
+}
+
+  /* Make the input cover the whole circle so it receives the click */
+  .checkbox input {
+    position: absolute;
+    inset: 0;          /* top/right/bottom/left: 0 */
+    opacity: 0;        /* invisible but clickable */
+    cursor: pointer;
+    appearance: none;
   }
-  .checkbox input { appearance: none; width: 0; height: 0; }
-  .checkbox.checked { background: var(--text); border-color: var(--text); }
-  .checkbox svg { display: none; width: 16px; height: 16px; fill: #fff; }
-  .checkbox.checked svg { display: block; }
+
+  /* Don’t let the SVG steal clicks */
+  .checkbox svg { pointer-events: none; }
+
+  /* Use aria-checked for styling since your JS updates it */
+  .checkbox[aria-checked="true"]  { background: var(--pill); border-color: var(--pill); }
+  .checkbox[aria-checked="true"] svg { display: block; fill: #fff; }
+  .checkbox svg { display: none; width: 16px; height: 16px; }
+
   
   /* Adders */
   .add-task, .add-list {
