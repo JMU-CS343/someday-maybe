@@ -335,6 +335,7 @@ body.sidebar-open .backdrop {
 /* Tasks & Cards */
 .tasks {
   width: 100%;
+  overflow: scroll;
 }
 
 .sm-card {
