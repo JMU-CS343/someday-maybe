@@ -25,7 +25,7 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
   // Rebuilt on each render so it always matches current state and stays unique.
   // ==========================================================================
   function mountLayoutToggle(isGrid, rerender) {
-    const bar  = document.querySelector('.top-bar');
+    const bar = document.querySelector('.top-bar');
     const gear = document.getElementById('gearBtn');
     if (!bar || !gear) return; // defensive: if header is missing, skip
 
@@ -80,8 +80,8 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
   // Public view renderer (called by main.js)
   // ==========================================================================
   window.renderBoards = function renderBoards(root) {
-    const state  = getState();
-    const mode   = localStorage.getItem(MODE_KEY) || 'swipe';
+    const state = getState();
+    const mode = localStorage.getItem(MODE_KEY) || 'swipe';
     const isGrid = mode === 'grid';
 
     // Keep the header toggle in sync with current mode
@@ -134,7 +134,7 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
         if (!document.getElementById('boards')) return;
 
         const k = e.key.toLowerCase();
-        if (k === 'g') { localStorage.setItem(MODE_KEY, 'grid');  renderBoards(root); }
+        if (k === 'g') { localStorage.setItem(MODE_KEY, 'grid'); renderBoards(root); }
         if (k === 's') { localStorage.setItem(MODE_KEY, 'swipe'); renderBoards(root); }
       });
       hotkeysBound = true;
@@ -151,12 +151,40 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
     node.className = 'list';
     node.dataset.listId = list.id;
 
+    let sort;
+    switch (list.sort) {
+      case "custom":
+        sort = "Custom";
+        break;
+      default:
+        sort = "Date";
+        break;
+    }
+
     node.innerHTML = `
       <div class="list-header">
-        <h2 class="list-title">${list.title}</h2>
-        <button class="menu list-menu" type="button" title="List menu">
-          <i class="fa-solid fa-ellipsis"></i>
-        </button>
+        <h2 class="list-title m-0">${list.title}</h2>
+
+        <div class="row">
+          <div class="col">
+            <div class="dropdown dropdown-sort">
+              <button class="btn btn-menu whitespace-nowrap" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fa-solid fa-sort"></i>
+                ${sort}
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" data-option="date" href="#">Date</a></li>
+                <li><a class="dropdown-item" data-option="custom" href="#">Custom</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="col">
+            <button class="btn btn-menu btn-icon list-menu" type="button" title="List menu">
+              <i class="fa-solid fa-ellipsis"></i>
+            </button>
+          </div>
+        </div>
       </div>
 
       <div class="tasks"></div>
@@ -166,7 +194,7 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
     `;
 
     // ⋯ menu: rename / delete
-    node.querySelector('.menu').addEventListener('click', (e) => {
+    node.querySelector('.list-menu').addEventListener('click', (e) => {
       openMenu(
         e.currentTarget,
         `
@@ -187,8 +215,14 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
       );
     });
 
+    node.querySelectorAll('.dropdown-sort .dropdown-item')
+      .forEach(btn => btn.addEventListener('click', () => {
+        list.sort = btn.dataset.option;
+        rerender(node);
+      }));
+
     // Task rendering with deterministic sort
-    const host  = node.querySelector('.tasks');
+    const host = node.querySelector('.tasks');
     const tasks = [...list.tasks];
     if (list.sort === 'custom') {
       tasks.sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0));
@@ -232,9 +266,9 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
   // Render a single task card with checkbox, click-to-edit, and DnD reorder
   function renderCard(list, task) {
     const card = document.createElement('article');
-    card.className = 'card';
+    card.className = 'sm-card';
     card.draggable = true;          // native DnD
-    card.tabIndex  = 0;             // keyboard focusable
+    card.tabIndex = 0;             // keyboard focusable
     card.style.cursor = 'pointer';
     card.dataset.taskId = task.id;
 
@@ -251,14 +285,14 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
     `;
 
     // === Toggle complete (use native checkbox change) ===
-    const cb    = card.querySelector('.checkbox');
+    const cb = card.querySelector('.checkbox');
     const input = cb.querySelector('input');
 
     function setDone(val) {
       updateTask(list.id, task.id, { done: val })
       cb.setAttribute('aria-checked', String(val));
-      input.checked = val;                         
-      task.done = val;                               
+      input.checked = val;
+      task.done = val;
       rerender(card.closest('.list'));
     }
 
@@ -283,8 +317,8 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
       e.dataTransfer.setData('text/plain', JSON.stringify({ listId: list.id, taskId: task.id }));
       card.classList.add('dragging');
     });
-    card.addEventListener('dragend',   () => card.classList.remove('dragging'));
-    card.addEventListener('dragover',  (e) => { e.preventDefault(); card.classList.add('drag-over'); });
+    card.addEventListener('dragend', () => card.classList.remove('dragging'));
+    card.addEventListener('dragover', (e) => { e.preventDefault(); card.classList.add('drag-over'); });
     card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
     card.addEventListener('drop', (e) => {
       e.preventDefault();
@@ -293,10 +327,10 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
       const data = safeJSON(e.dataTransfer.getData('text/plain'));
       if (!data || data.listId !== list.id) return;
 
-      const listEl    = card.closest('.list');
+      const listEl = card.closest('.list');
       const listTasks = getState().lists.find(l => l.id === list.id).tasks;
-      const fromIdx   = listTasks.findIndex(t => t.id === data.taskId);
-      const toIdx     = listTasks.findIndex(t => t.id === task.id);
+      const fromIdx = listTasks.findIndex(t => t.id === data.taskId);
+      const toIdx = listTasks.findIndex(t => t.id === task.id);
       if (fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) return;
 
       // If dropped on the bottom half of the card, insert after
@@ -340,18 +374,18 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
 
     // Pre-fill defaults
     form.title.value = defaults.title || '';
-    form.due.value   = defaults.due   || todayISO();
-    form.time.value  = defaults.time  || '';
-    form.tag.value   = defaults.tag   || '';
+    form.due.value = defaults.due || todayISO();
+    form.time.value = defaults.time || '';
+    form.tag.value = defaults.tag || '';
 
     // Submit + cancel
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const vals = {
         title: form.title.value.trim(),
-        due:   form.due.value,
-        time:  form.time.value,
-        tag:   form.tag.value.trim()
+        due: form.due.value,
+        time: form.time.value,
+        tag: form.tag.value.trim()
       };
       if (!vals.title) return;
       onSubmit(vals);

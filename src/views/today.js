@@ -28,7 +28,7 @@
     wrap.className = 'list'; // reuse your nice list/card styles
     wrap.innerHTML = `
       <div class="list-header">
-        <h2 class="list-title">Today — ${new Date(today).toLocaleDateString(undefined, { month:'long', day:'numeric', year:'numeric' })}</h2>
+        <h2 class="list-title">Today — ${new Date(today).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</h2>
       </div>
       <div class="tasks"></div>
     `;
@@ -54,11 +54,11 @@
 
   function renderTodayCard(list, task, dateStr) {
     const card = document.createElement('article');
-    card.className = 'card';
+    card.className = 'sm-card';
     card.tabIndex = 0;
 
     const time = task.time
-      ? new Date(`${dateStr}T${task.time}`).toLocaleTimeString(undefined, { hour:'numeric', minute:'2-digit' }) + ' · '
+      ? new Date(`${dateStr}T${task.time}`).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) + ' · '
       : '';
 
     card.innerHTML = `
