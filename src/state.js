@@ -68,7 +68,7 @@ function addTask(listId, task) {
     time: task.time || '',
     tag: task.tag || list.title,
     done: !!task.done,
-    rank: null
+    rank: list.tasks.length,
   };
   list.tasks.push(t);
   save();
@@ -90,7 +90,7 @@ function reorderTask(listId, fromIdx, toIdx) {
   if (!list || fromIdx === toIdx) return;
   const [moving] = list.tasks.splice(fromIdx, 1);
   list.tasks.splice(toIdx, 0, moving);
-  list.tasks.forEach((t, i) => t.rank = i);
+  list.tasks.forEach((t, i) => { if (t) t.rank = i; });
   list.sort = 'custom';
   save();
 }

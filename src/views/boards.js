@@ -13,7 +13,7 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
   const {
     getState, addList, renameList, deleteList,
     addTask, updateTask, reorderTask,
-    dateTimeMs, formatDateTime, todayISO
+    dateTimeMs, formatDateTime, todayISO, removeTask
   } = window;
   const { openMenu } = window;
 
@@ -145,6 +145,48 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
   // Internal helpers
   // ==========================================================================
 
+  // fromList: uid, fromCard: uid, toList: uid, toCard: ?uid, side: 'top' | 'bottom'
+  function reorderCards(fromList, fromCard, toList, toCard, side) {
+    const state = getState();
+    const fromListData = state.lists.find(l => l.id === fromList);
+    const toListData = state.lists.find(l => l.id === toList);
+
+    if (fromListData == null || toListData == null) return;
+
+    if (toCard == null || toListData.sort == 'date') {
+      if (fromList == toList) return;
+
+      const fromCardData = fromListData.tasks.find(t => t.id == fromCard);
+
+      removeTask(fromList, fromCard);
+      addTask(toList, fromCardData);
+    } else if (fromList == toList) {
+      const fromCardIndex = fromListData.tasks.findIndex(t => t.id === fromCard);
+      const toCardIndex = fromListData.tasks.findIndex(t => t.id === toCard);
+
+      reorderTask(fromList, fromCardIndex, toCardIndex);
+    } else {
+      const fromCardData = fromListData.tasks.find(t => t.id == fromCard);
+      const toCardIndex = toListData.tasks.findIndex(t => t.id === toCard);
+      const toListLength = toListData.tasks.length;
+
+      removeTask(fromList, fromCard);
+      addTask(toList, fromCardData);
+
+      const toIndex = side == 'top' ? toCardIndex : toCardIndex + 1;
+
+      reorderTask(toList, toListLength, toIndex);
+    }
+
+    const fromListElement = document.querySelector(`[data-list-id="${fromList}"]`);
+    rerender(fromListElement);
+
+    if (fromList != toList) {
+      const toListElement = document.querySelector(`[data-list-id="${toList}"]`);
+      rerender(toListElement);
+    }
+  }
+
   // Render a single list column (header + tasks + add/task)
   function renderList(list) {
     const node = document.createElement('section');
@@ -221,6 +263,8 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
         rerender(node);
       }));
 
+    list.tasks = list.tasks.filter(t => t != null && t != undefined);
+
     // Task rendering with deterministic sort
     const host = node.querySelector('.tasks');
     const tasks = [...list.tasks];
@@ -249,15 +293,11 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
     });
 
     // Allow dropping a dragged task to the END of this list
-    host.addEventListener('dragover', (e) => e.preventDefault());
-    host.addEventListener('drop', (e) => {
+    node.addEventListener('dragover', (e) => e.preventDefault());
+    node.addEventListener('drop', (e) => {
       e.preventDefault();
       const data = safeJSON(e.dataTransfer.getData('text/plain'));
-      if (!data || data.listId !== list.id) return;
-      const fromIdx = list.tasks.findIndex(t => t.id === data.taskId);
-      if (fromIdx < 0) return;
-      reorderTask(list.id, fromIdx, list.tasks.length - 1);
-      rerender(node);
+      reorderCards(data.listId, data.taskId, list.id, null, 'bottom');
     });
 
     return node;
@@ -322,21 +362,13 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
     card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
     card.addEventListener('drop', (e) => {
       e.preventDefault();
+      e.stopPropagation();
       card.classList.remove('drag-over');
 
       const data = safeJSON(e.dataTransfer.getData('text/plain'));
-      if (!data || data.listId !== list.id) return;
 
-      const listEl = card.closest('.list');
-      const listTasks = getState().lists.find(l => l.id === list.id).tasks;
-      const fromIdx = listTasks.findIndex(t => t.id === data.taskId);
-      const toIdx = listTasks.findIndex(t => t.id === task.id);
-      if (fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) return;
-
-      // If dropped on the bottom half of the card, insert after
-      const insertAt = (e.offsetY < card.offsetHeight / 2) ? toIdx : toIdx + 1;
-      reorderTask(list.id, fromIdx, insertAt > fromIdx ? insertAt - 1 : insertAt);
-      rerender(listEl);
+      const side = (e.offsetY < card.offsetHeight / 2) ? 'top' : 'bottom';
+      reorderCards(data.listId, data.taskId, list.id, task.id, side);
     });
 
     return card;
