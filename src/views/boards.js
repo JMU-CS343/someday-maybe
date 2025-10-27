@@ -111,8 +111,8 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
     addTile.style.cssText = 'align-items:center; justify-content:center;';
     addTile.innerHTML = `<button class="add-list" title="Add new list"><i class="fa-solid fa-plus"></i></button>`;
     addTile.querySelector('.add-list').addEventListener('click', () => {
-      const name = prompt('List name?');
-      if (name) { addList(name); renderBoards(root); }
+      addList("New List");
+      renderBoards(root);
     });
     boards.appendChild(addTile);
 
@@ -204,28 +204,29 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
     }
 
     node.innerHTML = `
-      <div class="list-header">
-        <h2 class="list-title m-0">${list.title}</h2>
+      <div class="list-header row">
+        <div class="col">
+          <input class="list-title w-100 rounded" type="text" role="heading" aria-level="2" value="${list.title}"/>
+        </div>
 
-        <div class="row">
-          <div class="col">
-            <div class="dropdown dropdown-sort">
-              <button class="btn btn-menu whitespace-nowrap" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="fa-solid fa-sort"></i>
-                ${sort}
-              </button>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" data-option="date" href="#">Date</a></li>
-                <li><a class="dropdown-item" data-option="custom" href="#">Custom</a></li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="col">
-            <button class="btn btn-menu btn-icon list-menu" type="button" title="List menu">
-              <i class="fa-solid fa-ellipsis"></i>
+        <!-- TODO: remove text at small widths -->
+        <div class="col" style="flex: 0 0 0">
+          <div class="dropdown dropdown-sort">
+            <button class="btn btn-menu whitespace-nowrap" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fa-solid fa-sort"></i>
+              ${sort}
             </button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" data-option="date" href="#">Date</a></li>
+              <li><a class="dropdown-item" data-option="custom" href="#">Custom</a></li>
+            </ul>
           </div>
+        </div>
+
+        <div class="col" style="flex: 0 0 0">
+          <button class="btn btn-menu btn-icon list-menu" type="button" title="List menu">
+            <i class="fa-solid fa-ellipsis"></i>
+          </button>
         </div>
       </div>
 
@@ -235,23 +236,25 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
       </div>
     `;
 
+    node.querySelector(".list-title").addEventListener('blur', e => {
+      const value = e.target.value;
+      if (value) {
+        renameList(list.id, value);
+        rerender(node);
+      }
+    });
+
     // ⋯ menu: rename / delete
     node.querySelector('.list-menu').addEventListener('click', (e) => {
       openMenu(
         e.currentTarget,
         `
-          <button data-act="rename">✎ Rename list</button>
           <button data-act="delete" class="danger">🗑 Delete list</button>
         `,
         (act) => {
-          if (act === 'rename') {
-            const name = prompt('Rename list:', list.title);
-            if (name) { renameList(list.id, name); rerender(node); }
-          } else if (act === 'delete') {
-            if (confirm('Delete this list and all its tasks?')) {
-              deleteList(list.id);
-              node.remove();
-            }
+          if (confirm('Delete this list and all its tasks?')) {
+            deleteList(list.id);
+            node.remove();
           }
         },
       );
@@ -262,8 +265,6 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
         list.sort = btn.dataset.option;
         rerender(node);
       }));
-
-    list.tasks = list.tasks.filter(t => t != null && t != undefined);
 
     // Task rendering with deterministic sort
     const host = node.querySelector('.tasks');
