@@ -269,9 +269,8 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
     // Task rendering with deterministic sort
     const host = node.querySelector('.tasks');
     const tasks = [...list.tasks];
-    if (list.sort === 'custom') {
-      tasks.sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0));
-    } else {
+    // custom doesn't get sorted
+    if (list.sort === 'date') {
       tasks.sort((a, b) =>
         dateTimeMs(a) - dateTimeMs(b) ||
         (a.rank ?? 0) - (b.rank ?? 0) ||

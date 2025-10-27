@@ -22,7 +22,7 @@ const defaultState = {
       title: 'Shopping',
       sort: 'dueAsc',
       tasks: [
-        { id: uid(), title: 'Buy Nature Valley tenders', due: todayISO(), time: '', rank: null, tag: 'Shopping', done: false }
+        { id: uid(), title: 'Buy Nature Valley tenders', due: todayISO(), time: '', tag: 'Shopping', done: false }
       ],
     },
     {
@@ -30,7 +30,7 @@ const defaultState = {
       title: 'Meal prep',
       sort: 'dueAsc',
       tasks: [
-        { id: uid(), title: 'Cook chicken', due: todayISO(), time: '', rank: null, tag: 'Cooking', done: false }
+        { id: uid(), title: 'Cook chicken', due: todayISO(), time: '', tag: 'Cooking', done: false }
       ],
     }
   ]
@@ -68,7 +68,6 @@ function addTask(listId, task) {
     time: task.time || '',
     tag: task.tag || list.title,
     done: !!task.done,
-    rank: list.tasks.length,
   };
   list.tasks.push(t);
   save();
@@ -90,7 +89,6 @@ function reorderTask(listId, fromIdx, toIdx) {
   if (!list || fromIdx === toIdx) return;
   const [moving] = list.tasks.splice(fromIdx, 1);
   list.tasks.splice(toIdx, 0, moving);
-  list.tasks.forEach((t, i) => { if (t) t.rank = i; });
   list.sort = 'custom';
   save();
 }
