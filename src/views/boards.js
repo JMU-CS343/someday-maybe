@@ -227,7 +227,6 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
           <div class="dropdown dropdown-sort" aria-label="sort">
             <button class="btn btn-icon-text btn-menu whitespace-nowrap" type="button" data-bs-toggle="dropdown" aria-expanded="false">
               <i class="fa-solid fa-sort"></i>
-              <!-- The list should present as a radio group -->
               ${sort}
             </button>
             <ul class="dropdown-menu">
@@ -238,9 +237,17 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
         </div>
 
         <div class="col" style="flex: 0 0 0">
-          <button class="btn btn-menu btn-icon list-menu" type="button" title="List menu">
-            <i class="fa-solid fa-ellipsis"></i>
-          </button>
+          <div class="dropdown dropdown-list-menu" aria-label="menu">
+            <button class="btn btn-icon btn-menu" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fa-solid fa-ellipsis"></i>
+            </button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item dropdown-list-menu-trash" href="#">
+                <i class="fa-solid fa-trash"></i>
+                Delete
+              </a></li>
+            </ul>
+          </div>
         </div>
       </div>
 
@@ -258,20 +265,12 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
       }
     });
 
-    // ⋯ menu: rename / delete
-    node.querySelector('.list-menu').addEventListener('click', (e) => {
-      openMenu(
-        e.currentTarget,
-        `
-          <button data-act="delete" class="danger">🗑 Delete list</button>
-        `,
-        (act) => {
-          if (confirm('Delete this list and all its tasks?')) {
-            deleteList(list.id);
-            node.remove();
-          }
-        },
-      );
+    node.querySelector(".list-title").addEventListener('keydown', e => {
+      // blur on Enter
+      if (e.keyCode == 13) {
+        e.stopPropagation();
+        e.target.blur();
+      }
     });
 
     node.querySelectorAll('.dropdown-sort .dropdown-item')
@@ -280,6 +279,12 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
         save();
         rerender(node);
       }));
+
+    node.querySelector('.dropdown-list-menu-trash')
+      .addEventListener('click', () => {
+        deleteList(list.id);
+        node.remove();
+      });
 
     // Task rendering with deterministic sort
     const host = node.querySelector('.tasks');
