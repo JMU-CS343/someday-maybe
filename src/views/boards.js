@@ -203,6 +203,19 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
         break;
     }
 
+    function sortDropdownItem(id, display) {
+      return `
+        <li><a class="dropdown-item" data-option="${id}" href="#" role="radio" aria-checked="${list.sort == id}">
+          <div class="row">
+            <div class="col"> ${display} </div>
+            <div class="col d-flex flex-row-reverse align-items-center">
+              <i class="fa-solid ${list.sort == id ? "fa-check" : "fa-blank"}"></i>
+            </div>
+          </div>
+        </a></li>
+      `;
+    }
+
     node.innerHTML = `
       <div class="list-header row">
         <div class="col">
@@ -211,14 +224,15 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
 
         <!-- TODO: remove text at small widths -->
         <div class="col" style="flex: 0 0 0">
-          <div class="dropdown dropdown-sort">
-            <button class="btn btn-menu whitespace-nowrap" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <div class="dropdown dropdown-sort" aria-label="sort">
+            <button class="btn btn-icon-text btn-menu whitespace-nowrap" type="button" data-bs-toggle="dropdown" aria-expanded="false">
               <i class="fa-solid fa-sort"></i>
+              <!-- The list should present as a radio group -->
               ${sort}
             </button>
             <ul class="dropdown-menu">
-              <li><a class="dropdown-item" data-option="date" href="#">Date</a></li>
-              <li><a class="dropdown-item" data-option="custom" href="#">Custom</a></li>
+              ${sortDropdownItem('date', 'Date')}
+              ${sortDropdownItem('custom', 'Custom')}
             </ul>
           </div>
         </div>
@@ -263,6 +277,7 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
     node.querySelectorAll('.dropdown-sort .dropdown-item')
       .forEach(btn => btn.addEventListener('click', () => {
         list.sort = btn.dataset.option;
+        save();
         rerender(node);
       }));
 
