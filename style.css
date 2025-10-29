@@ -564,6 +564,14 @@ body.sidebar-open .backdrop {
   margin-bottom: 4px;
 }
 
+.cal-holiday {
+  font-weight: 700;
+  margin-bottom: 4px;
+  font-size: 0.75rem;
+  text-align: right;
+  scrollbar-width: none;
+}
+
 .cal-item {
   font-size: 12px;
   white-space: nowrap;

@@ -1,9 +1,11 @@
 // src/views/calendar.js
 // Read-only month grid based on tasks' due dates/times (non-module version).
 
+// TODO: https://holidayapi.com/
+
 (() => {
   // Pull needed helpers from globals exposed by state.js
-  const { getState, dateTimeMs } = window;
+  const { getState, dateTimeMs, holidayGet } = window;
 
   // Expose renderer as a global for main.js
   window.renderCalendar = function renderCalendar(root) {
@@ -40,7 +42,7 @@
           <h2>${monthName}</h2>
           <button class="btn" id="calNext" aria-label="Next month">▶</button>
         </div>
-        <div class="cal-dow">${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div>${d}</div>`).join('')}</div>
+        <div class="cal-dow">${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => `<div>${d}</div>`).join('')}</div>
         <div class="cal-grid"></div>
       `;
 
@@ -58,9 +60,14 @@
           `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
         const head = document.createElement('div');
-        head.className = 'cal-date';
-        head.textContent = day;
+        head.classList.add("cal-cell-head", "row", "align-items-center");
+        head.innerHTML = `
+          <div class="col-auto cal-date">${day}</div>
+          <div class="col cal-holiday whitespace-nowrap overflow-scroll"></div>
+        `;
         cell.appendChild(head);
+
+        const holidayElem = head.querySelector('.cal-holiday');
 
         const items = (byDate.get(dateStr) || [])
           .slice() // don’t mutate original
@@ -71,7 +78,7 @@
           s.className = 'cal-item';
           const time = t.time
             ? new Date(`${dateStr}T${t.time}`)
-                .toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) + ' · '
+              .toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) + ' · '
             : '';
           s.textContent = time + t.title;
           cell.appendChild(s);
@@ -83,6 +90,16 @@
           more.textContent = `+${items.length - 4} more`;
           cell.appendChild(more);
         }
+
+        holidayGet(y, m + 1, day)
+          .then(holiday => {
+            if (holiday) {
+              holidayElem.textContent = holiday.name;
+            }
+          })
+          .catch(err => {
+            console.log(err);
+          });
 
         grid.appendChild(cell);
       }
