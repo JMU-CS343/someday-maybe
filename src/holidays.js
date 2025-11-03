@@ -1,5 +1,5 @@
 
-const HOLIDAYS_LS_KEY = 'someday-maybe-holidays-v1';
+const HOLIDAYS_LS_KEY = 'someday-maybe-holidays-v3';
 
 function loadHolidays() {
   try {
@@ -56,32 +56,54 @@ async function holidayQueryYear(year) {
       throw new Error(`holiday api returned malformed data: ${JSON.stringify(holiday)}`);
     }
 
-    if (ACCEPT_TYPE[type] && locations == "All") {
-      holidays[date] = { name };
+    if (locations == "All") {
+      holidays[date] = { name, type };
     }
   }
 
   return holidays;
 }
 
+// We only want one api call to happen at a time so we don't burn through our api requests.
+// When we query the holidays for a year, we put the promise for that query in this object
+// so that other callers use that api call instead. (It's also worth noting that we don't
+// care about race conditions here cause js is single-threaded)
+let holidayApiLocks = {};
+
 // function(year: number) -> Map<Date, Holiday>
 async function holidayGetYear(year) {
   let holidays = holidaysState[year];
 
-  if (!holidays) {
-    holidays = await holidayQueryYear(year);
+  if (holidays) {
+    // The state already exists:
+    return holidays;
+  } else if (holidayApiLocks[year]) {
+    // An api call is already being made:
+    return await holidayApiLocks[year];
+  } else {
+    // Otherwise, make the call:
+    let promise = holidayQueryYear(year);
+    holidayApiLocks[year] = promise;
+    holidays = await promise;
+
+    // And save it where necessary.
     holidaysState[year] = holidays;
     saveHolidays();
+    delete holidayApiLocks[year];
+    return holidays;
   }
-
-  return holidays;
 }
 
 // function(year: number, month: number, day: number) -> ?Holiday
 async function holidayGet(year, month, day) {
   let holidays = await holidayGetYear(year);
   let dateString = `${year.toString().padStart(4, '0')}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-  return holidays[dateString];
+  let holiday = holidays[dateString];
+  if (ACCEPT_TYPE[holiday?.type]) {
+    return holiday;
+  } else {
+    return null;
+  }
 }
 
 holidayGet(2025, 12, 25).then(holiday => console.log(holiday));
