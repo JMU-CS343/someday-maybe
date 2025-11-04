@@ -884,3 +884,33 @@ body[data-view="today"] #app {
 .dropdown-value {
   margin: 0em 0.25em;
 }
+
+/* dark-ish backdrop */
+.task-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.15);
+  z-index: 9998;
+}
+
+/* the actual form */
+.task-modal {
+  position: fixed;
+  top: 16%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 12px 35px rgba(0,0,0,0.12);
+  padding: 14px;
+  z-index: 9999;
+  min-width: 420px;
+  max-width: min(90vw, 520px);
+}
+@media (max-width: 500px) {
+  .task-modal {
+    min-width: auto;
+    width: calc(100vw - 24px);
+  }
+}
+

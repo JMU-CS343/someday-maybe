@@ -391,7 +391,25 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
     card.dataset.taskId = task.id;
 
     card.innerHTML = `
-      <div class="chip">${escapeHtml(task.tag || list.title)}</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+        <div class="chip">${escapeHtml(task.tag || list.title)}</div>
+        <button class="task-delete-btn"
+            aria-label="Delete task"
+            style="
+            position:absolute;
+            bottom:10px !important;
+            right:10px !important;
+            border:none;
+            background:transparent;
+            color:#c0392b;
+            font-size:16px;
+            line-height:1;
+            cursor:pointer;
+            z-index:5;
+            ">
+            ×
+        </button>
+      </div>
       <div class="checkbox" role="checkbox" aria-checked="${task.done ? 'true' : 'false'}" tabindex="0">
         <input type="checkbox" ${task.done ? 'checked' : ''}/>
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -401,6 +419,17 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
       <div class="task-title">${escapeHtml(task.title)}</div>
       <div class="muted due">Due: ${escapeHtml(formatDateTime(task.due, task.time))}</div>
     `;
+
+
+    const deleteBtn = card.querySelector('.task-delete-btn');
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const ok = confirm('Delete this task?');
+      if (!ok) return;
+      removeTask(list.id, task.id);
+      const listEl = card.closest('.list');
+      rerender(listEl);
+    });
 
     // === Toggle complete (use native checkbox change) ===
     const cb = card.querySelector('.checkbox');
@@ -453,9 +482,15 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
   }
 
   // Inline add/edit task form (replaces a card on edit; shown above list for add)
-  function createTaskForm({ defaults = {}, submitLabel = 'Add', onSubmit }) {
+  function createTaskForm({ defaults = {}, submitLabel = 'Add', onSubmit, onDelete = null }) {
     const form = document.createElement('form');
     form.className = 'card task-form';
+    form.style.position = 'relative';
+    form.style.zIndex = '1000';
+    form.style.background = '#fff';
+    form.style.boxShadow = '0 10px 25px rgba(0,0,0,0.08)';
+    form.style.borderRadius = '12px';
+
     form.innerHTML = `
       <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
         <input name="title" placeholder="Task title" required
