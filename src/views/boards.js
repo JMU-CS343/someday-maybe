@@ -301,16 +301,74 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
 
     // Add-task launcher (inserts a small form above the task list)
     node.querySelector('.add-task').addEventListener('click', () => {
-      const existing = node.querySelector('form.task-form');
-      if (existing) existing.remove();
+      // if a form is already open, close it first so we don't stack forms
+      const existingForm = node.querySelector('form.task-form');
+      if (existingForm) existingForm.remove();
 
+      // insert the form before the task list
       host.before(createTaskForm({
-        onSubmit: (vals) => { addTask(list.id, vals); rerender(node); },
         defaults: { tag: list.title, due: todayISO(), time: '' },
-        submitLabel: 'Add'
+        submitLabel: 'Add',
+        onSubmit: (vals) => {
+          // 1) check if a task with this title already exists in this list
+          const state = getState();
+          const currentList = state.lists.find(l => l.id === list.id);
+          const match = currentList.tasks.find(
+            t => t.title.trim().toLowerCase() === vals.title.trim().toLowerCase()
+          );
+
+          if (match) {
+            // 2) task already exists → let user choose to edit or delete
+            const wantsEdit = window.confirm(
+              'A task with that title already exists. OK = edit it, Cancel = delete it.'
+            );
+
+            if (wantsEdit) {
+              // swap that card for an edit form
+              const cardEl = node.querySelector(`[data-task-id="${match.id}"]`);
+              if (cardEl) {
+                const editForm = createTaskForm({
+                  defaults: {
+                    title: match.title,
+                    due: match.due,
+                    time: match.time,
+                    tag: match.tag
+                  },
+                  submitLabel: 'Save',
+                  onSubmit: (newVals) => {
+                    updateTask(list.id, match.id, newVals);
+                    rerender(node);
+                  },
+                  onDelete: () => {
+                    removeTask(list.id, match.id);
+                    rerender(node);
+                  }
+                });
+                cardEl.replaceWith(editForm);
+                editForm.title.focus();
+              } else {
+                // fallback: just update in state
+                updateTask(list.id, match.id, vals);
+                rerender(node);
+              }
+            } else {
+              // user picked "delete" path
+              removeTask(list.id, match.id);
+              rerender(node);
+            }
+
+          } else {
+            // 3) no duplicate → normal add
+            addTask(list.id, vals);
+            rerender(node);
+          }
+        }
       }));
+
+      // focus the title right away
       node.querySelector('input[name="title"]').focus();
     });
+
 
     // Allow dropping a dragged task to the END of this list
     node.addEventListener('dragover', (e) => e.preventDefault());
@@ -422,6 +480,8 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
       <div class="muted" style="margin-top:6px; font-size:12px;">
         Defaults to today — change if needed.
       </div>
+      <div class="error"
+         style="margin-top:6px; font-size:12px; color:#c0392b; display:none;"></div>
     `;
 
     // Pre-fill defaults
@@ -430,18 +490,48 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
     form.time.value = defaults.time || '';
     form.tag.value = defaults.tag || '';
 
-    // Submit + cancel
+    const errorBox = form.querySelector('.error');
+
+    function showError(msg) {
+      errorBox.textContent = msg;
+      errorBox.style.display = msg ? 'block' : 'none';
+    }
+
+    function hideError() {
+      errorBox.textContent = '';
+      errorBox.style.display = 'none';
+    }
+
+    // Submit + cancel with validation
     form.addEventListener('submit', (e) => {
       e.preventDefault();
+
       const vals = {
         title: form.title.value.trim(),
         due: form.due.value,
         time: form.time.value,
         tag: form.tag.value.trim()
       };
-      if (!vals.title) return;
+
+      if (!vals.title) {
+        showError('Please enter a task title.');
+        form.title.focus();
+        return;
+      }
+
+      if (vals.due) {
+        const today = todayISO();
+        if (vals.due < today) {
+          showError('Due date cannot be in the past.');
+          form.due.focus();
+          return;
+        }
+      }
+
+      hideError();
       onSubmit(vals);
     });
+
     form.querySelector('.cancel').addEventListener('click', () => {
       const list = form.closest('.list');
       if (list) rerender(list);
