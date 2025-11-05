@@ -5,22 +5,28 @@
 // - Drawer (≤844px)   : off-canvas sidebar toggled by hamburger/backdrop
 
 // ------------------------ DOM refs ------------------------
-const app         = document.getElementById('app');
-const sidebar     = document.getElementById('sidebar');
-const navToggle   = document.getElementById('navToggle');    // hamburger (drawer)
+const app = document.getElementById('app');
+const sidebar = document.getElementById('sidebar');
+const navToggle = document.getElementById('navToggle');    // hamburger (drawer)
 const navBackdrop = document.getElementById('navBackdrop');  // overlay for drawer
 const collapseBtn = document.getElementById('collapseBtn');  // bottom chevron
 
 // ---------------------- Breakpoints -----------------------
 // Mirror the CSS breakpoints exactly so behavior/UI stay in lockstep.
 const mqSmall = window.matchMedia('(max-width: 844px)');
-const mqRail  = window.matchMedia('(max-width: 1189px) and (min-width: 845px)');
+const mqRail = window.matchMedia('(max-width: 1189px) and (min-width: 845px)');
 
 // ------------------------ Router -------------------------
 // Renders the requested view and updates active state in the sidebar.
 function setView(view) {
   localStorage.setItem('someday-view', view);
   document.body.setAttribute('data-view', view);
+
+  rerenderView();
+}
+
+function rerenderView() {
+  let view = localStorage.getItem('someday-view') || 'boards';
 
   // Update active highlight in the sidebar nav
   [...(sidebar?.querySelectorAll('.nav-item') || [])].forEach(btn => {
@@ -51,7 +57,7 @@ function syncCollapseAffordance() {
 
   // Rail (845–1189)
   if (mqRail.matches) {
-    const pinned  = document.body.classList.contains('sidebar-peek-pinned');
+    const pinned = document.body.classList.contains('sidebar-peek-pinned');
     const showing = pinned || document.body.classList.contains('sidebar-peek-hover');
     collapseBtn?.setAttribute('aria-label', pinned ? 'Unpin sidebar' : 'Pin sidebar');
     collapseBtn?.setAttribute('aria-expanded', String(showing));
@@ -161,7 +167,7 @@ sidebar?.addEventListener('click', (e) => {
 });
 
 // ---------------------- Theme popover ---------------------
-const gear  = document.getElementById('gearBtn');
+const gear = document.getElementById('gearBtn');
 const panel = document.getElementById('settings');
 
 gear?.addEventListener('click', () => {

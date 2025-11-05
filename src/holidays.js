@@ -106,6 +106,8 @@ async function holidayGet(year, month, day) {
   }
 }
 
-holidayGet(2025, 12, 25).then(holiday => console.log(holiday));
-holidayGet(2025, 10, 31).then(holiday => console.log(holiday));
-holidayGet(2025, 10, 29).then(holiday => console.log(holiday));
+function resetHolidays() {
+  holidaysState = defaultHolidays();
+  saveHolidays();
+  rerenderView();
+}

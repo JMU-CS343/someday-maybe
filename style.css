@@ -889,7 +889,7 @@ body[data-view="today"] #app {
 .task-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.15);
+  background: rgba(0, 0, 0, 0.15);
   z-index: 9998;
 }
 
@@ -901,12 +901,13 @@ body[data-view="today"] #app {
   transform: translateX(-50%);
   background: #fff;
   border-radius: 14px;
-  box-shadow: 0 12px 35px rgba(0,0,0,0.12);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
   padding: 14px;
   z-index: 9999;
   min-width: 420px;
   max-width: min(90vw, 520px);
 }
+
 @media (max-width: 500px) {
   .task-modal {
     min-width: auto;
@@ -914,3 +915,18 @@ body[data-view="today"] #app {
   }
 }
 
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+    /* Start at 0 degrees rotation */
+  }
+
+  to {
+    transform: rotate(360deg);
+    /* End at 360 degrees rotation for a full circle */
+  }
+}

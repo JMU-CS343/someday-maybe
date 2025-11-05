@@ -63,7 +63,9 @@
         head.classList.add("cal-cell-head", "row", "align-items-center");
         head.innerHTML = `
           <div class="col-auto cal-date">${day}</div>
-          <div class="col cal-holiday whitespace-nowrap overflow-scroll"></div>
+          <div class="col cal-holiday whitespace-nowrap overflow-scroll">
+            <i class="fa-solid fa-spinner spinner"></i>
+          </div>
         `;
         cell.appendChild(head);
 
@@ -95,6 +97,8 @@
           .then(holiday => {
             if (holiday) {
               holidayElem.textContent = holiday.name;
+            } else {
+              holidayElem.innerHTML = "";
             }
           })
           .catch(err => {
