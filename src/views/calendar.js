@@ -15,7 +15,33 @@
 
     const wrap = document.createElement('section');
     wrap.id = 'calendar-view';
+
+    const errorModal = document.createElement("div");
+    errorModal.classList.add("modal");
+    errorModal.id = "error-modal";
+    errorModal.tabIndex = -1;
+
+    errorModal.innerHTML = `
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="error-modal-label">Error</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>Failed to fetch holidays:</p>
+            <pre><code id="error-modal-error"></code></pre>
+            <p>Refresh site to try again.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    `;
+
     root.innerHTML = '';
+    root.appendChild(errorModal);
     root.appendChild(wrap);
 
     draw();
@@ -94,15 +120,18 @@
         }
 
         holidayGet(y, m + 1, day)
+          // catch first so the first element's spinner is still cleared
+          .catch(err => {
+            errorModal.querySelector("#error-modal-error").textContent = err;
+            new bootstrap.Modal('#error-modal', {}).show();
+            console.log(err);
+          })
           .then(holiday => {
             if (holiday) {
               holidayElem.textContent = holiday.name;
             } else {
               holidayElem.innerHTML = "";
             }
-          })
-          .catch(err => {
-            console.log(err);
           });
 
         grid.appendChild(cell);
