@@ -98,6 +98,8 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
       `}
     `;
 
+    root.appendChild(editCardModal());
+
     const boards = root.querySelector('#boards');
 
     // Render existing lists
@@ -301,72 +303,10 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
 
     // Add-task launcher (inserts a small form above the task list)
     node.querySelector('.add-task').addEventListener('click', () => {
-      // if a form is already open, close it first so we don't stack forms
-      const existingForm = node.querySelector('form.task-form');
-      if (existingForm) existingForm.remove();
+      const listId = list.id;
+      const taskId = addTask(listId, { title: "New Task" });
 
-      // insert the form before the task list
-      host.before(createTaskForm({
-        defaults: { tag: list.title, due: todayISO(), time: '' },
-        submitLabel: 'Add',
-        onSubmit: (vals) => {
-          // 1) check if a task with this title already exists in this list
-          const state = getState();
-          const currentList = state.lists.find(l => l.id === list.id);
-          const match = currentList.tasks.find(
-            t => t.title.trim().toLowerCase() === vals.title.trim().toLowerCase()
-          );
-
-          if (match) {
-            // 2) task already exists → let user choose to edit or delete
-            const wantsEdit = window.confirm(
-              'A task with that title already exists. OK = edit it, Cancel = delete it.'
-            );
-
-            if (wantsEdit) {
-              // swap that card for an edit form
-              const cardEl = node.querySelector(`[data-task-id="${match.id}"]`);
-              if (cardEl) {
-                const editForm = createTaskForm({
-                  defaults: {
-                    title: match.title,
-                    due: match.due,
-                    time: match.time,
-                    tag: match.tag
-                  },
-                  submitLabel: 'Save',
-                  onSubmit: (newVals) => {
-                    updateTask(list.id, match.id, newVals);
-                    rerender(node);
-                  },
-                  onDelete: () => {
-                    removeTask(list.id, match.id);
-                    rerender(node);
-                  }
-                });
-                cardEl.replaceWith(editForm);
-                editForm.title.focus();
-              } else {
-                // fallback: just update in state
-                updateTask(list.id, match.id, vals);
-                rerender(node);
-              }
-            } else {
-              // user picked "delete" path
-              removeTask(list.id, match.id);
-              rerender(node);
-            }
-
-          } else {
-            // 3) no duplicate → normal add
-            addTask(list.id, vals);
-            rerender(node);
-          }
-        }
-      }));
-
-      // focus the title right away
-      node.querySelector('input[name="title"]').focus();
+      editCard({ listId, taskId }, true);
     });
 
 
@@ -458,10 +398,11 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
       }
     });
 
+    const fullId = { listId: list.id, taskId: task.id };
 
     // Drag & drop reorder within same list (drop above/below the target card)
     card.addEventListener('dragstart', (e) => {
-      e.dataTransfer.setData('text/plain', JSON.stringify({ listId: list.id, taskId: task.id }));
+      e.dataTransfer.setData('text/plain', JSON.stringify(fullId));
       card.classList.add('dragging');
     });
     card.addEventListener('dragend', () => card.classList.remove('dragging'));
@@ -478,102 +419,149 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
       reorderCards(data.listId, data.taskId, list.id, task.id, side);
     });
 
+    card.addEventListener('click', () => {
+      editCard(fullId);
+    });
+
     return card;
   }
 
-  // Inline add/edit task form (replaces a card on edit; shown above list for add)
-  function createTaskForm({ defaults = {}, submitLabel = 'Add', onSubmit, onDelete = null }) {
-    const form = document.createElement('form');
-    form.className = 'card task-form';
-    form.style.position = 'relative';
-    form.style.zIndex = '1000';
-    form.style.background = '#fff';
-    form.style.boxShadow = '0 10px 25px rgba(0,0,0,0.08)';
-    form.style.borderRadius = '12px';
+  function editCardModal() {
+    let div = document.createElement('div');
+    div.innerHTML = `
+      <div class="modal fade" id="cardModal" tabindex="-1" aria-labelledby="cardModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="cardModalLabel">Edit Card</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <form class="card task-form needs-validation rounded" novalidate>
+                <div class="d-flex align-items-center gap-3">
+                  <input type="text" name="title" class="form-control w-auto" placeholder="Task title" required />
+                  <input type="date" name="due"  class="form-control w-auto" aria-label="Due date" />
+                  <input type="time" name="time" class="form-control w-auto" aria-label="Due time" />
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                  <input type="text" name="tag" class="form-control" placeholder="Tag (optional)" />
+                </div>
+                <div class="muted ps-1">
+                  Defaults to today — change if needed.
+                </div>
+                <!-- hidden submit button to catch enter key -->
+                <input type="submit" hidden />
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-primary card-modal-save">Save changes</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
 
-    form.innerHTML = `
-      <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
-        <input name="title" placeholder="Task title" required
-               style="flex:1; padding:10px; border:1px solid #d9dbe3; border-radius:10px;" />
-        <input type="date" name="due"  aria-label="Due date"
-               style="padding:10px; border:1px solid #d9dbe3; border-radius:10px;" />
-        <input type="time" name="time" aria-label="Due time"
-               style="padding:10px; border:1px solid #d9dbe3; border-radius:10px;" />
-      </div>
-      <div style="display:flex; gap:8px; align-items:center;">
-        <input name="tag" placeholder="Tag (optional)"
-               style="flex:1; padding:10px; border:1px solid #d9dbe3; border-radius:10px;" />
-        <button type="submit" class="btn"
-                style="padding:10px 14px; border-radius:10px; border:1px solid #e6e7eb; background:#fff; font-weight:600;">
-          ${submitLabel}
-        </button>
-        <button type="button" class="btn cancel"
-                style="padding:10px 14px; border-radius:10px; border:1px solid #e6e7eb; background:#fff;">
-          Cancel
-        </button>
-      </div>
-      <div class="muted" style="margin-top:6px; font-size:12px;">
-        Defaults to today — change if needed.
-      </div>
-      <div class="error"
-         style="margin-top:6px; font-size:12px; color:#c0392b; display:none;"></div>
-    `;
+    const form = div.querySelector('form');
 
-    // Pre-fill defaults
-    form.title.value = defaults.title || '';
-    form.due.value = defaults.due || todayISO();
-    form.time.value = defaults.time || '';
-    form.tag.value = defaults.tag || '';
+    const submit = () => {
+      form.classList.add('was-validated');
 
-    const errorBox = form.querySelector('.error');
+      const listId = form.dataset.listId;
+      const taskId = form.dataset.taskId;
+      const isAdd = form.dataset.isAdd === "true";
 
-    function showError(msg) {
-      errorBox.textContent = msg;
-      errorBox.style.display = msg ? 'block' : 'none';
-    }
-
-    function hideError() {
-      errorBox.textContent = '';
-      errorBox.style.display = 'none';
-    }
-
-    // Submit + cancel with validation
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-
-      const vals = {
-        title: form.title.value.trim(),
-        due: form.due.value,
-        time: form.time.value,
-        tag: form.tag.value.trim()
-      };
-
-      if (!vals.title) {
-        showError('Please enter a task title.');
+      if (!form.title.value) {
         form.title.focus();
+        form.title.setCustomValidity(".");
         return;
       }
 
-      if (vals.due) {
+      if (isAdd && form.due.value) {
         const today = todayISO();
-        if (vals.due < today) {
-          showError('Due date cannot be in the past.');
+        if (form.due.value < today) {
           form.due.focus();
+          form.due.setCustomValidity(".");
           return;
         }
       }
 
-      hideError();
-      onSubmit(vals);
+      const data = {
+        title: form.title.value,
+        due: form.due.value,
+        time: form.time.value,
+        tag: form.tag.value,
+      };
+
+      updateTask(listId, taskId, data);
+      const listElem = document.querySelector(`[data-list-id="${listId}"]`);
+      rerender(listElem);
+
+      form.dataset.isAdd = "false";
+
+      const modal = bootstrap.Modal.getInstance("#cardModal");
+      modal.hide();
+    };
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      submit();
     });
 
-    form.querySelector('.cancel').addEventListener('click', () => {
-      const list = form.closest('.list');
-      if (list) rerender(list);
-      else form.remove();
+    div.querySelector('.card-modal-save').addEventListener('click', e => {
+      e.preventDefault();
+      submit();
     });
 
-    return form;
+    const modal = div.querySelector("#cardModal");
+    modal.addEventListener("hide.bs.modal", e => {
+      e.stopPropagation();
+
+      const listId = form.dataset.listId;
+      const taskId = form.dataset.taskId;
+      const isAdd = form.dataset.isAdd === "true";
+
+      if (isAdd) {
+        removeTask(listId, taskId);
+
+        const listElem = document.querySelector(`[data-list-id="${listId}"]`);
+        rerender(listElem);
+      }
+    });
+
+    modal.addEventListener("hidden.bs.modal", e => {
+      e.stopPropagation();
+
+      form.title.setCustomValidity("");
+      form.due.setCustomValidity("");
+      form.classList.remove('was-validated');
+    });
+
+    return div;
+  }
+
+  function editCard({ listId, taskId }, isAdd = false) {
+    const state = getState();
+    const list = state?.lists?.find(x => x.id === listId);
+    const card = list?.tasks?.find(x => x.id === taskId);
+
+    if (!card) {
+      console.log(`failed to find card ${taskId} in list ${listId}`);
+    }
+
+    const elem = document.querySelector('#cardModal');
+    const modal = new bootstrap.Modal(elem, {});
+
+    const form = elem.querySelector('form');
+    form.dataset.listId = listId;
+    form.dataset.taskId = taskId;
+    form.dataset.isAdd = isAdd;
+
+    form.title.value = card.title;
+    form.due.value = card.due;
+    form.time.value = card.time;
+    form.tag.value = card.tag;
+
+    modal.toggle();
   }
 
   // Rebuild a single list in place (cheap, local refresh)

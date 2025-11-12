@@ -930,3 +930,24 @@ body[data-view="today"] #app {
     /* End at 360 degrees rotation for a full circle */
   }
 }
+
+#cardModal .modal-dialog {
+  max-width: 50%;
+  min-width: 700px;
+}
+
+.task-form input {
+  padding: 0.625rem;
+
+  /* WARN: hardcoded color */
+  border: 1px solid #d9dbe3;
+  border-radius: 0.625rem;
+}
+
+.task-form input[type=text] {
+  flex: 1;
+}
+
+.task-form>* {
+  margin: 0.5rem;
+}
