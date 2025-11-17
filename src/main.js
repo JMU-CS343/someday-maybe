@@ -11,6 +11,12 @@ const navToggle = document.getElementById('navToggle');    // hamburger (drawer)
 const navBackdrop = document.getElementById('navBackdrop');  // overlay for drawer
 const collapseBtn = document.getElementById('collapseBtn');  // bottom chevron
 
+// Search input (in the top bar)
+const searchInput = document.getElementById('taskSearch');
+
+// global search term (empty = no filtering)
+window.currentSearch = '';
+
 // ---------------------- Breakpoints -----------------------
 // Mirror the CSS breakpoints exactly so behavior/UI stay in lockstep.
 const mqSmall = window.matchMedia('(max-width: 844px)');
@@ -190,6 +196,15 @@ panel?.querySelectorAll('.btn').forEach(btn => {
 
     panel.style.display = 'none';
   });
+});
+
+// ---------------------- Search wiring ----------------------
+searchInput?.addEventListener('input', (e) => {
+  window.currentSearch = (e.target.value || '').toLowerCase();
+
+  // Re-render the current view so filtering applies everywhere
+  const view = document.body.getAttribute('data-view') || 'boards';
+  setView(view);
 });
 
 // ------------------------ Boot ---------------------------

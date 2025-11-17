@@ -951,3 +951,13 @@ body[data-view="today"] #app {
 .task-form>* {
   margin: 0.5rem;
 }
+
+#taskSearch {
+  max-width: 260px;
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid #d4d7de;
+  background: #fff;
+  font: inherit;
+}

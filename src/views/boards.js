@@ -288,10 +288,24 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
         node.remove();
       });
 
-    // Task rendering with deterministic sort
+    // // Task rendering with deterministic sort
+    // const host = node.querySelector('.tasks');
+    // const tasks = [...list.tasks];
+    // // custom doesn't get sorted
+    // if (list.sort === 'date') {
+    //   tasks.sort((a, b) =>
+    //     dateTimeMs(a) - dateTimeMs(b) ||
+    //     (a.rank ?? 0) - (b.rank ?? 0) ||
+    //     a.title.localeCompare(b.title)
+    //   );
+    // }
+    // tasks.forEach(t => host.appendChild(renderCard(list, t)));
+
+        // Task rendering with deterministic sort + 🔍 search filtering
     const host = node.querySelector('.tasks');
-    const tasks = [...list.tasks];
-    // custom doesn't get sorted
+    let tasks = [...list.tasks];
+
+    // 1) sort (if needed)
     if (list.sort === 'date') {
       tasks.sort((a, b) =>
         dateTimeMs(a) - dateTimeMs(b) ||
@@ -299,7 +313,34 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
         a.title.localeCompare(b.title)
       );
     }
-    tasks.forEach(t => host.appendChild(renderCard(list, t)));
+
+    // 2) filter by current search term (from main.js)
+    const search = (window.currentSearch || '').trim().toLowerCase();
+    if (search) {
+      tasks = tasks.filter(t => {
+        const title = (t.title || '').toLowerCase();
+        const tag   = (t.tag || '').toLowerCase();
+        const when  = formatDateTime(t.due, t.time).toLowerCase(); // optional
+
+        return (
+          title.includes(search) ||
+          tag.includes(search) ||
+          when.includes(search)
+        );
+      });
+    }
+
+    // 3) render results (or a “no matches” message)
+    if (tasks.length === 0 && search) {
+      const empty = document.createElement('div');
+      empty.className = 'muted';
+      empty.style.padding = '12px 16px';
+      empty.textContent = 'No matching tasks';
+      host.appendChild(empty);
+    } else {
+      tasks.forEach(t => host.appendChild(renderCard(list, t)));
+    }
+
 
     // Add-task launcher (inserts a small form above the task list)
     node.querySelector('.add-task').addEventListener('click', () => {
