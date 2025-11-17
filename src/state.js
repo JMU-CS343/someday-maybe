@@ -16,9 +16,8 @@ function todayISO() {
 }
 
 function applyTheme(theme) {
-  const root = document.documentElement;
-  root.classList.remove('theme-purple');
-  if (theme === 'purple') root.classList.add('theme-purple');
+  const root = document.body;
+  root.classList.toggle('theme-purple', theme === 'purple');
 }
 
 const defaultState = {

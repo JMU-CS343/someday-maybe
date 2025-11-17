@@ -173,8 +173,15 @@ window.addEventListener('click', (e) => {
   }
 });
 panel?.querySelectorAll('.btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.body.classList.toggle('theme-purple', btn.dataset.theme === 'purple');
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+
+    const theme = btn.dataset.theme;
+    if (theme === 'purple' || theme === 'default') {
+      // update state + LS + DOM
+      window.setTheme(theme);
+    }
+
     panel.style.display = 'none';
   });
 });
