@@ -28,7 +28,9 @@ function saveHolidays() {
 // don't steal this please :)
 const API_KEY = "7AESmE1nWW9Mz5jMjmYdrQsv1rUuoNq1";
 
-const ACCEPT_TYPE = { "Federal Holiday": true, "Observance": true };
+const ACCEPT_TYPE = { "Federal Holiday": true, "Observance": false, "Worldwide observance": false };
+
+window.developerTools.testHolidayErrorHandling = false;
 
 // function(year: number) -> Map<Date, Holiday>
 async function holidayQueryYear(year) {
@@ -37,7 +39,12 @@ async function holidayQueryYear(year) {
   // NOTE: this is hardcoded D:
   let country = "US";
 
-  let response = await fetch(`https://calendarific.com/api/v2/holidays?&api_key=${API_KEY}&country=${country}&year=${year}`);
+  let response;
+  if (window.developerTools?.testHolidayErrorHandling) {
+    response = await fetch(`https://calendarific.com/api/v2/holidays?country=${country}&year=${year}`);
+  } else {
+    response = await fetch(`https://calendarific.com/api/v2/holidays?&api_key=${API_KEY}&country=${country}&year=${year}`);
+  }
   let json = await response.json();
 
   if (json?.meta?.code != 200) throw new Error("holiday api did not return status of 200");
@@ -78,12 +85,18 @@ async function holidayGetYear(year) {
     // The state already exists:
     return holidays;
   } else if (holidayApiLocks[year]) {
-    // An api call is already being made:
-    return await holidayApiLocks[year];
+    // An api call is already being made or has already failed:
+    try {
+      return await holidayApiLocks[year];
+    } catch {
+      // If it fails, we silence the error - we only want to notify the user once.
+      return {};
+    }
   } else {
     // Otherwise, make the call:
     let promise = holidayQueryYear(year);
     holidayApiLocks[year] = promise;
+    // If we error here, we don't clear the lock to silence the error.
     holidays = await promise;
 
     // And save it where necessary.
@@ -106,6 +119,9 @@ async function holidayGet(year, month, day) {
   }
 }
 
-holidayGet(2025, 12, 25).then(holiday => console.log(holiday));
-holidayGet(2025, 10, 31).then(holiday => console.log(holiday));
-holidayGet(2025, 10, 29).then(holiday => console.log(holiday));
+window.developerTools.resetHolidays = () => {
+  holidaysState = defaultHolidays();
+  holidayApiLocks = {};
+  saveHolidays();
+  rerenderView();
+}

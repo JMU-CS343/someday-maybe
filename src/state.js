@@ -117,6 +117,7 @@ function addTask(listId, task) {
   };
   list.tasks.push(t);
   save();
+  return t.id;
 }
 function updateTask(listId, taskId, patch) {
   const list = state.lists.find(l => l.id === listId);
