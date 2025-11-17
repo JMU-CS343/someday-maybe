@@ -15,7 +15,14 @@ function todayISO() {
   return `${y}-${m}-${day}`;
 }
 
+function applyTheme(theme) {
+  const root = document.documentElement;
+  root.classList.remove('theme-purple');
+  if (theme === 'purple') root.classList.add('theme-purple');
+}
+
 const defaultState = {
+  theme: 'default',
   lists: [
     {
       id: uid(),
@@ -36,12 +43,52 @@ const defaultState = {
   ]
 };
 
-let state = load() || defaultState;
+const saved = load();
+let state = saved || defaultState;
+
+if (!saved) {
+  save();
+}
+
+console.log('[state] loaded from LS:', state);
+
+if (!state.theme) {
+  state.theme = 'default';
+  save();
+  console.log('[state] no theme found, set to default and saved');
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => applyTheme(state.theme));
+} else {
+  applyTheme(state.theme);
+}
+
+
+function setTheme(theme) {
+  state.theme = theme;
+  save();
+  applyTheme(theme);
+}
+
+function getTheme() {
+  return state.theme || 'default';
+}
 
 // ---- getters / persistence
 function getState() { return state; }
-function save() { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
-function replaceState(next) { state = next; save(); }
+
+function save() { 
+  if (!state.theme) state.theme = 'default';
+  localStorage.setItem(LS_KEY, JSON.stringify(state)); 
+  console.log('[state] saved to LS:', state);
+}
+
+function replaceState(next) { 
+  const theme = next.theme || state.theme || 'default';
+  state = { ...next, theme };
+  save(); 
+}
 
 // ---- List operations
 function addList(title) {
@@ -128,6 +175,10 @@ Object.assign(window, {
   uid, todayISO, getState, replaceState,
   addList, renameList, deleteList,
   addTask, updateTask, removeTask, reorderTask,
-  dateTimeMs, formatDateTime
+  dateTimeMs, formatDateTime,
+  setTheme, getTheme, 
+  getState, replaceState
 });
+
+
 
