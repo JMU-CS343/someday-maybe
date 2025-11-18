@@ -115,4 +115,8 @@ class CardAttachment {
   fileName() {
     return this.file.name;
   }
+
+  mimeType() {
+    return this.file.type;
+  }
 }

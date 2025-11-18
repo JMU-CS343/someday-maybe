@@ -301,7 +301,7 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
     // }
     // tasks.forEach(t => host.appendChild(renderCard(list, t)));
 
-        // Task rendering with deterministic sort + 🔍 search filtering
+    // Task rendering with deterministic sort + 🔍 search filtering
     const host = node.querySelector('.tasks');
     let tasks = [...list.tasks];
 
@@ -319,8 +319,8 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
     if (search) {
       tasks = tasks.filter(t => {
         const title = (t.title || '').toLowerCase();
-        const tag   = (t.tag || '').toLowerCase();
-        const when  = formatDateTime(t.due, t.time).toLowerCase(); // optional
+        const tag = (t.tag || '').toLowerCase();
+        const when = formatDateTime(t.due, t.time).toLowerCase(); // optional
 
         return (
           title.includes(search) ||
@@ -471,25 +471,32 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
     const element = document.createElement('div');
     element.classList.add('card');
     element.classList.add('file-card');
+    element.classList.add('flex-column-reverse');
 
     element.innerHTML = `
-      <!-- <img src="..." class="card-img-top" alt="..."> -->
-      <div class="card-img-top"></div>
       <div class="card-body">
         <h3 class="card-title fs-6"></h3>
         <a href="#" class="btn btn-primary btn-open">Open</a>
         <a href="#" class="btn btn-danger btn-delete">Delete</a>
       </div>
+      <div class="card-img-top overflow-hidden"></div>
     `;
 
     const fileName = element.querySelector('h3');
     const openButton = element.querySelector('.btn-open');
     const deleteButton = element.querySelector('.btn-delete');
+    const imageDiv = element.querySelector('.card-img-top');
 
     dir_promise
       .then(async dir => ({ attachment: await attachment_promise(dir), dir }))
       .then(({ attachment, dir }) => {
         fileName.textContent = attachment.fileName();
+        if (attachment.mimeType().startsWith('image')) {
+          let url = attachment.getUrl();
+          imageDiv.innerHTML = `
+            <img src="${url}" class="w-100 h-100 object-fit-cover">
+          `;
+        }
         openButton.addEventListener('click', () => {
           let url = attachment.getUrl();
           window.open(url, '_blank');
