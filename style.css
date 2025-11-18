@@ -22,6 +22,7 @@
   --accent: #5865f2;
   --card: #ffffff;
   --mini-bg: #f5f5f1;
+  --danger: #dc3545;
 
   /* effects & radii */
   --shadow: 0 1px 2px rgba(0, 0, 0, .08), 0 8px 24px rgba(0, 0, 0, .06);
@@ -48,12 +49,63 @@ body.theme-purple {
   --menu-card: #300234;
   --menu-text: #ffff;
   --text: #390c49;
-  --muted: #938c96;
+  --muted: #a693ae;
   --pill: #472b54;
   --accent: #a708eb;
   --card: #ffffff;
   --mini-bg: #f6f0f9;
+  --danger: #f20f64;
+}
 
+body.theme-purple .btn-primary {
+  --bs-btn-color: var(--menu-text);
+  --bs-btn-bg: var(--pill);
+  --bs-btn-border-color: var(--pill);
+  --bs-btn-hover-color: var(--menu-text);
+  --bs-btn-hover-bg: var(--pill);
+  --bs-btn-hover-border-color: var(--pill);
+  --bs-btn-focus-shadow-rgb: 130, 138, 145;
+  --bs-btn-active-color: var(--menu-text);
+  --bs-btn-active-bg: var(--pill);
+  --bs-btn-active-border-color: var(--pill);
+  --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+  --bs-btn-disabled-color: var(--menu-text);
+  --bs-btn-disabled-bg: var(--pill);
+  --bs-btn-disabled-border-color: var(--pill);
+}
+
+body.theme-purple .btn-danger {
+  --bs-btn-color: var(--menu-text);
+  --bs-btn-bg: var(--danger);
+  --bs-btn-border-color: var(--danger);
+  --bs-btn-hover-color: var(--menu-text);
+  --bs-btn-hover-bg: var(--danger);
+  --bs-btn-hover-border-color: var(--danger);
+  --bs-btn-focus-shadow-rgb: 130, 138, 145;
+  --bs-btn-active-color: var(--menu-text);
+  --bs-btn-active-bg: var(--danger);
+  --bs-btn-active-border-color: var(--danger);
+  --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+  --bs-btn-disabled-color: var(--menu-text);
+  --bs-btn-disabled-bg: var(--danger);
+  --bs-btn-disabled-border-color: var(--danger);
+}
+
+body.theme-purple .btn-secondary {
+  --bs-btn-color: var(--menu-text);
+  --bs-btn-bg: var(--muted);
+  --bs-btn-border-color: var(--muted);
+  --bs-btn-hover-color: var(--menu-text);
+  --bs-btn-hover-bg: var(--muted);
+  --bs-btn-hover-border-color: var(--muted);
+  --bs-btn-focus-shadow-rgb: 130, 138, 145;
+  --bs-btn-active-color: var(--menu-text);
+  --bs-btn-active-bg: var(--muted);
+  --bs-btn-active-border-color: var(--muted);
+  --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+  --bs-btn-disabled-color: var(--menu-text);
+  --bs-btn-disabled-bg: var(--muted);
+  --bs-btn-disabled-border-color: var(--muted);
 }
 
 /* ===========================
