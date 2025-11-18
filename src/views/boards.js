@@ -467,6 +467,42 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
     return card;
   }
 
+  function attachmentElement(dir_promise, attachment_promise, remove_callback) {
+    const element = document.createElement('div');
+    element.classList.add('card');
+    element.classList.add('file-card');
+
+    element.innerHTML = `
+      <!-- <img src="..." class="card-img-top" alt="..."> -->
+      <div class="card-img-top"></div>
+      <div class="card-body">
+        <h3 class="card-title fs-6"></h3>
+        <a href="#" class="btn btn-primary btn-open">Open</a>
+        <a href="#" class="btn btn-danger btn-delete">Delete</a>
+      </div>
+    `;
+
+    const fileName = element.querySelector('h3');
+    const openButton = element.querySelector('.btn-open');
+    const deleteButton = element.querySelector('.btn-delete');
+
+    dir_promise
+      .then(async dir => ({ attachment: await attachment_promise(dir), dir }))
+      .then(({ attachment, dir }) => {
+        fileName.textContent = attachment.fileName();
+        openButton.addEventListener('click', () => {
+          let url = attachment.getUrl();
+          window.open(url, '_blank');
+        });
+        deleteButton.addEventListener('click', () => {
+          dir.remove(attachment.fileName());
+          remove_callback(element);
+        });
+      });
+
+    return element;
+  }
+
   function editCardModal() {
     let div = document.createElement('div');
     div.innerHTML = `
@@ -474,11 +510,11 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
-              <h1 class="modal-title fs-5" id="cardModalLabel">Edit Card</h1>
+              <h1 class="modal-title fs-4" id="cardModalLabel">Edit Card</h1>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-              <form class="card task-form needs-validation rounded" novalidate>
+              <form class="task-form needs-validation rounded border mb-3" novalidate>
                 <div class="d-flex align-items-center gap-3">
                   <input type="text" name="title" class="form-control w-auto" placeholder="Task title" required />
                   <input type="date" name="due"  class="form-control w-auto" aria-label="Due date" />
@@ -493,6 +529,16 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
                 <!-- hidden submit button to catch enter key -->
                 <input type="submit" hidden />
               </form>
+              <h2 class="fs-5">Attachments</h2>
+              <div class="file-box rounded border mt-3 d-flex p-3 overflow-scroll">
+                <div class="file-list d-flex gap-3"></div>
+                <div class="file-input-card card d-flex align-items-center justify-content-center">
+                  <input type="file" class="file-input" hidden />
+                  <button type="button" class="btn btn-secondary btn-lg btn-icon file-input-button">
+                    <i class="fa-solid fa-file-circle-plus"></i>
+                  </button>
+                </div>
+              </div>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -504,6 +550,7 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
 
     const form = div.querySelector('form');
 
+    // submit stuff:
     const submit = () => {
       form.classList.add('was-validated');
 
@@ -553,6 +600,8 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
       submit();
     });
 
+
+    // hide stuff:
     const modal = div.querySelector("#cardModal");
     modal.addEventListener("hide.bs.modal", e => {
       e.stopPropagation();
@@ -575,6 +624,28 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
       form.title.setCustomValidity("");
       form.due.setCustomValidity("");
       form.classList.remove('was-validated');
+    });
+
+
+    // file stuff:
+    const file_box = div.querySelector(".file-box");
+    const file_input = file_box.querySelector('.file-input');
+    const file_input_button = file_box.querySelector('.file-input-button');
+    const file_list = file_box.querySelector('.file-list');
+
+    file_input_button.addEventListener('click', () => {
+      file_input.click();
+    });
+
+    file_input.addEventListener('change', e => {
+      const taskId = form.dataset.taskId;
+      const dir = CardAttachments.open(taskId);
+
+      const files = e.target.files;
+      for (const file of files) {
+        let element = attachmentElement(dir, dir => dir.add(file), element => file_list.removeChild(element));
+        file_list.appendChild(element);
+      }
     });
 
     return div;
@@ -601,6 +672,16 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
     form.due.value = card.due;
     form.time.value = card.time;
     form.tag.value = card.tag;
+
+    const file_list = elem.querySelector('.file-list');
+    file_list.replaceChildren();
+    (async () => {
+      const dir = await CardAttachments.open(taskId);
+      for (let file of await dir.list()) {
+        let element = attachmentElement((async _ => dir)(), async _ => file, element => file_list.removeChild(element));
+        file_list.appendChild(element);
+      }
+    })();
 
     modal.toggle();
   }

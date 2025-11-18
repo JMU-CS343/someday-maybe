@@ -99,6 +99,12 @@ function renameList(listId, title) {
   if (l) { l.title = title.trim(); save(); }
 }
 function deleteList(listId) {
+  const list = state.lists.find(x => x.id === listId);
+  for (let task of list.tasks) {
+    let taskId = task.id;
+    deleteTaskAttachments(taskId);
+  }
+
   state.lists = state.lists.filter(l => l.id !== listId);
   save();
 }
@@ -130,6 +136,17 @@ function removeTask(listId, taskId) {
   if (!list) return;
   list.tasks = list.tasks.filter(t => t.id !== taskId);
   save();
+
+  deleteTaskAttachments(taskId);
+}
+function deleteTaskAttachments(taskId) {
+  (async () => {
+    try {
+      await CardAttachments.remove(taskId);
+    } catch (err) {
+      console.error(err);
+    }
+  })();
 }
 function reorderTask(listId, fromIdx, toIdx) {
   const list = state.lists.find(l => l.id === listId);

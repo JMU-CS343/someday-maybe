@@ -961,3 +961,26 @@ body[data-view="today"] #app {
   background: #fff;
   font: inherit;
 }
+
+.file-box {
+  height: 16em;
+}
+
+.file-box .card {
+  width: 14em;
+  flex-shrink: 0;
+}
+
+/* only add a gap if it has a child */
+.file-list:has(*) {
+  margin-right: 1em;
+}
+
+.file-card .card-img-top {
+  height: 100%;
+}
+
+/* blank image */
+.file-card div.card-img-top {
+  background: rgba(0, 0, 0, 0.05);
+}
