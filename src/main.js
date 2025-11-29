@@ -211,3 +211,4 @@ searchInput?.addEventListener('input', (e) => {
 // Render the last-view (default Boards) and sync ARIA/init state.
 setView(localStorage.getItem('someday-view') || 'boards');
 syncCollapseAffordance();
+

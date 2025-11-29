@@ -32,6 +32,13 @@
         aria-controls="sidebar"
         aria-expanded="false"
         title="Menu"
+        onclick="
+          (function(btn){
+            const open = !document.body.classList.contains('sidebar-open');
+            document.body.classList.toggle('sidebar-open', open);
+            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+          })(this);
+        "
       >
         <i class="fa-solid fa-bars"></i>
       </button>
@@ -93,7 +100,16 @@
       </aside>
 
       <!-- Drawer backdrop (mobile only via CSS) -->
-      <div class="backdrop" id="navBackdrop" aria-hidden="true"></div>
+      <div 
+        class="backdrop" 
+        id="navBackdrop" 
+        aria-hidden="true"
+        onclick="
+          document.body.classList.remove('sidebar-open');
+          const btn = document.getElementById('navToggle');
+          if (btn) btn.setAttribute('aria-expanded', 'false');
+        "
+      ></div>
 
       <main class="content" id="main" tabindex="-1" aria-labelledby="siteTitle">
         <!-- App views render here -->

@@ -67,5 +67,59 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+// ================================
+// Mobile drawer sidebar toggle
+// ================================
+(() => {
+  const navToggle   = document.getElementById('navToggle');
+  const navBackdrop = document.getElementById('navBackdrop');
+
+  if (!navToggle || !navBackdrop) {
+    console.log('[drawer] navToggle or navBackdrop missing');
+    return;
+  }
+
+  console.log('[drawer] hamburger wired');
+
+  function isMobile() {
+    return window.innerWidth <= 844;
+  }
+
+  function toggleSidebar() {
+    if (!isMobile()) {
+      console.log('[drawer] click ignored (not mobile width)');
+      return;
+    }
+
+    const open = !document.body.classList.contains('sidebar-open');
+    document.body.classList.toggle('sidebar-open', open);
+    navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    console.log('[drawer] sidebar-open =', open);
+  }
+
+  function closeSidebar() {
+    document.body.classList.remove('sidebar-open');
+    navToggle.setAttribute('aria-expanded', 'false');
+    console.log('[drawer] sidebar closed');
+  }
+
+  // Click hamburger
+  navToggle.addEventListener('click', toggleSidebar);
+
+  // Click backdrop closes
+  navBackdrop.addEventListener('click', closeSidebar);
+
+  // ESC closes
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeSidebar();
+  });
+
+  // Resize out of mobile = force-close
+  window.addEventListener('resize', () => {
+    if (!isMobile()) closeSidebar();
+  });
+})();
+
+
 
 
