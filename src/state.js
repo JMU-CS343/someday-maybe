@@ -23,21 +23,39 @@ function applyTheme(theme) {
 const defaultState = {
   theme: 'default',
   lists: [
+    // {
+    //   id: uid(),
+    //   title: 'Shopping',
+    //   sort: 'dueAsc',
+    //   tasks: [
+    //     { id: uid(), title: 'Buy Nature Valley tenders', due: todayISO(), time: '', tag: 'Shopping', done: false }
+    //   ],
+    // },
+    // {
+    //   id: uid(),
+    //   title: 'Meal prep',
+    //   sort: 'dueAsc',
+    //   tasks: [
+    //     { id: uid(), title: 'Cook chicken', due: todayISO(), time: '', tag: 'Cooking', done: false }
+    //   ],
+    // }
     {
       id: uid(),
-      title: 'Shopping',
-      sort: 'dueAsc',
-      tasks: [
-        { id: uid(), title: 'Buy Nature Valley tenders', due: todayISO(), time: '', tag: 'Shopping', done: false }
-      ],
+      title: 'To Do',
+      sort: 'date',
+      tasks: [],
     },
     {
       id: uid(),
-      title: 'Meal prep',
-      sort: 'dueAsc',
-      tasks: [
-        { id: uid(), title: 'Cook chicken', due: todayISO(), time: '', tag: 'Cooking', done: false }
-      ],
+      title: 'Reminders',
+      sort: 'date',
+      tasks: [],
+    },
+    {
+      id: uid(),
+      title: 'Done',
+      sort: 'date',
+      tasks: [],
     }
   ]
 };
@@ -77,16 +95,16 @@ function getTheme() {
 // ---- getters / persistence
 function getState() { return state; }
 
-function save() { 
+function save() {
   if (!state.theme) state.theme = 'default';
-  localStorage.setItem(LS_KEY, JSON.stringify(state)); 
+  localStorage.setItem(LS_KEY, JSON.stringify(state));
   console.log('[state] saved to LS:', state);
 }
 
-function replaceState(next) { 
+function replaceState(next) {
   const theme = next.theme || state.theme || 'default';
   state = { ...next, theme };
-  save(); 
+  save();
 }
 
 // ---- List operations
@@ -193,7 +211,7 @@ Object.assign(window, {
   addList, renameList, deleteList,
   addTask, updateTask, removeTask, reorderTask,
   dateTimeMs, formatDateTime,
-  setTheme, getTheme, 
+  setTheme, getTheme,
   getState, replaceState
 });
 
