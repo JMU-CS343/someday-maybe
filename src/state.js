@@ -134,7 +134,7 @@ function addTask(listId, task) {
   const t = {
     id: uid(),
     title: task.title.trim(),
-    due: task.due || '',
+    due: task.due || todayISO(),
     time: task.time || '',
     tag: task.tag || list.title,
     done: !!task.done,

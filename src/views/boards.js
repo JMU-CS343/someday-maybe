@@ -374,22 +374,6 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
     card.innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
         <div class="chip">${escapeHtml(task.tag || list.title)}</div>
-        <button class="task-delete-btn"
-            aria-label="Delete task"
-            style="
-            position:absolute;
-            bottom:10px !important;
-            right:10px !important;
-            border:none;
-            background:transparent;
-            color:#c0392b;
-            font-size:16px;
-            line-height:1;
-            cursor:pointer;
-            z-index:5;
-            ">
-            ×
-        </button>
       </div>
       <div class="checkbox" role="checkbox" aria-checked="${task.done ? 'true' : 'false'}" tabindex="0">
         <input type="checkbox" ${task.done ? 'checked' : ''}/>
@@ -401,16 +385,6 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
       <div class="muted due">Due: ${escapeHtml(formatDateTime(task.due, task.time))}</div>
     `;
 
-
-    const deleteBtn = card.querySelector('.task-delete-btn');
-    deleteBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const ok = confirm('Delete this task?');
-      if (!ok) return;
-      removeTask(list.id, task.id);
-      const listEl = card.closest('.list');
-      rerender(listEl);
-    });
 
     // === Toggle complete (use native checkbox change) ===
     const cb = card.querySelector('.checkbox');
@@ -548,6 +522,9 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
               </div>
             </div>
             <div class="modal-footer">
+              <div class="d-flex flex-grow-1">
+                <button type="button" class="btn btn-danger card-modal-delete">Delete</button>
+              </div>
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
               <button type="button" class="btn btn-primary card-modal-save">Save changes</button>
             </div>
@@ -653,6 +630,22 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
         let element = attachmentElement(dir, dir => dir.add(file), element => file_list.removeChild(element));
         file_list.appendChild(element);
       }
+    });
+
+
+    // delete button:
+    modal.querySelector('.card-modal-delete').addEventListener('click', e => {
+      const listId = form.dataset.listId;
+      const taskId = form.dataset.taskId;
+
+      e.stopPropagation();
+      removeTask(listId, taskId);
+
+      const listElem = document.querySelector(`[data-list-id="${listId}"]`);
+      rerender(listElem);
+
+      const modal = bootstrap.Modal.getInstance("#cardModal");
+      modal.hide();
     });
 
     return div;
