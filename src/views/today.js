@@ -30,7 +30,7 @@
       <div class="list-header">
         <h2 class="list-title">Today — ${new Date(today + "T00:00").toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</h2>
       </div>
-      <div class="tasks" style="padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem;"></div>
+      <div class="tasks"></div>
     `;
     root.appendChild(wrap);
 
