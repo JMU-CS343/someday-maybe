@@ -504,9 +504,7 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
                 <div class="d-flex align-items-center gap-3">
                   <input type="text" name="tag" class="form-control" placeholder="Tag (optional)" />
                 </div>
-                <div class="muted ps-1">
-                  Defaults to today — change if needed.
-                </div>
+                <div class="text-danger ps-1 card-modal-error"></div>
                 <!-- hidden submit button to catch enter key -->
                 <input type="submit" hidden />
               </form>
@@ -533,6 +531,7 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
       </div>`;
 
     const form = div.querySelector('form');
+    const error = div.querySelector('.card-modal-error');
 
     // submit stuff:
     const submit = () => {
@@ -542,19 +541,29 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
       const taskId = form.dataset.taskId;
       const isAdd = form.dataset.isAdd === "true";
 
+      error.textContent = "";
+
+      let valid = true;
       if (!form.title.value) {
         form.title.focus();
         form.title.setCustomValidity(".");
-        return;
+        error.textContent += "Expected a non-empty title. ";
+        valid = false;
+      } else {
+        form.title.setCustomValidity("");
       }
 
-      if (isAdd && form.due.value) {
-        const today = todayISO();
-        if (form.due.value < today) {
-          form.due.focus();
-          form.due.setCustomValidity(".");
-          return;
-        }
+      if (isAdd && form.due.value && form.due.value < todayISO()) {
+        form.due.focus();
+        form.due.setCustomValidity(".");
+        error.textContent += "Expected a due date in the future. ";
+        valid = false;
+      } else {
+        form.due.setCustomValidity("");
+      }
+
+      if (!valid) {
+        return;
       }
 
       const data = {
@@ -608,6 +617,7 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
       form.title.setCustomValidity("");
       form.due.setCustomValidity("");
       form.classList.remove('was-validated');
+      error.textContent = "";
     });
 
 
