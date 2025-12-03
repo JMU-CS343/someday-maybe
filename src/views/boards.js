@@ -382,7 +382,7 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
         </svg>
       </div>
       <div class="task-title">${escapeHtml(task.title)}</div>
-      <div class="muted due">Due: ${escapeHtml(formatDateTime(task.due, task.time))}</div>
+      <div><div class="muted due chip">Due: ${escapeHtml(formatDateTime(task.due, task.time))}</div></div>
     `;
 
 
@@ -437,6 +437,43 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
     card.addEventListener('click', () => {
       editCard(fullId);
     });
+
+
+    // due date
+    let due = card.querySelector(".due");
+
+    let dueMs = dateTimeMs(task);
+    if (dueMs != Infinity) {
+      let now = new Date().getTime();
+      let untilDue = dueMs - now;
+
+      due.classList.remove('text-bg-danger');
+      due.classList.remove('text-bg-success');
+      due.classList.remove('text-bg-secondary');
+
+      if (task.done) {
+        due.classList.add('text-bg-success');
+      } else if (untilDue <= 0) {
+        due.classList.add('text-bg-danger');
+      } else {
+        due.classList.add('text-bg-secondary');
+
+        // "sleep" promise
+        new Promise(r => setTimeout(r, untilDue))
+          .then(() => {
+            if (!document.body.contains(due)) {
+              return;
+            }
+
+            due.classList.remove('text-bg-secondary');
+            due.classList.add('text-bg-danger');
+          });
+      }
+    } else {
+      due.classList.remove('text-bg-danger');
+      due.classList.remove('text-bg-success');
+      due.classList.add('text-bg-secondary');
+    }
 
     return card;
   }

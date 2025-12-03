@@ -178,8 +178,13 @@ function reorderTask(listId, fromIdx, toIdx) {
 // ---- Helpers used by views
 function dateTimeMs(task) {
   if (!task.due) return Infinity;
-  const t = (task.time && /^\d{2}:\d{2}$/.test(task.time)) ? task.time : '00:00';
-  const d = new Date(task.due + 'T' + t);
+  let d;
+  if (task.time && /^\d{2}:\d{2}$/.test(task.time)) {
+    d = new Date(task.due + 'T' + task.time);
+  } else {
+    d = new Date(task.due + 'T00:00');
+    d.setTime(d.getTime() + 24 * 60 * 60 * 1000);
+  }
   const ms = d.getTime();
   return Number.isFinite(ms) ? ms : Infinity;
 }

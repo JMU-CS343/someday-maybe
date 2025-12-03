@@ -55,6 +55,7 @@ body.theme-purple {
   --card: #ffffff;
   --mini-bg: #f6f0f9;
   --danger: #f20f64;
+  --success: #558770;
 }
 
 body.theme-purple .btn-primary {
@@ -106,6 +107,18 @@ body.theme-purple .btn-secondary {
   --bs-btn-disabled-color: var(--menu-text);
   --bs-btn-disabled-bg: var(--muted);
   --bs-btn-disabled-border-color: var(--muted);
+}
+
+body.theme-purple .text-bg-secondary {
+  background-color: var(--muted) !important;
+}
+
+body.theme-purple .text-bg-danger {
+  background-color: var(--danger) !important;
+}
+
+body.theme-purple .text-bg-success {
+  background-color: var(--success) !important;
 }
 
 /* ===========================
@@ -838,12 +851,14 @@ body.sidebar-open .backdrop {
 
   .sidebar {
     position: fixed;
-    top: 0;                 /* start at very top of the viewport */
+    top: 0;
+    /* start at very top of the viewport */
     left: 0;
     right: 0;
     width: 100%;
     bottom: auto;
-    max-height: 100vh;      /* can cover whole screen */
+    max-height: 100vh;
+    /* can cover whole screen */
     overflow-y: auto;
     background: var(--pill);
 
@@ -1045,4 +1060,8 @@ body[data-view="today"] #app {
 /* blank image */
 .file-card div.card-img-top {
   background: rgba(0, 0, 0, 0.05);
+}
+
+.due {
+  width: fit-content;
 }
