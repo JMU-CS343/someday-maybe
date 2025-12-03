@@ -38,7 +38,7 @@
 
     if (items.length === 0) {
       const empty = document.createElement('div');
-      empty.className = 'card';
+      empty.className = 'sm-card';
       empty.innerHTML = `
         <div class="task-title">Nothing due today 🎉</div>
         <div class="muted">Add a task on any board and set its date to today.</div>
