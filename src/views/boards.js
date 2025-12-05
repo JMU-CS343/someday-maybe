@@ -458,16 +458,19 @@ let hotkeysBound = false; // avoid rebinding global key handlers across rerender
       } else {
         due.classList.add('text-bg-secondary');
 
-        // "sleep" promise
-        new Promise(r => setTimeout(r, untilDue))
-          .then(() => {
-            if (!document.body.contains(due)) {
-              return;
-            }
+        // the timeout instantly returns if it's greater than this number
+        if (untilDue < 2147483647) {
+          // "sleep" promise
+          new Promise(r => setTimeout(r, untilDue))
+            .then(() => {
+              if (!document.body.contains(due)) {
+                return;
+              }
 
-            due.classList.remove('text-bg-secondary');
-            due.classList.add('text-bg-danger');
-          });
+              due.classList.remove('text-bg-secondary');
+              due.classList.add('text-bg-danger');
+            });
+        }
       }
     } else {
       due.classList.remove('text-bg-danger');
